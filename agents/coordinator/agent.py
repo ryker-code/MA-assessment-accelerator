@@ -2,72 +2,53 @@ import asyncio
 import json
 import os
 import uuid
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 
 from agents.shared.llm_router import LLMRouter
-from agents.shared.markdown_writer import save_agent_output, _update_manifest
+from agents.shared.markdown_writer import save_agent_output
 from agents.shared.band_utils import send_to_room, format_agent_message
-from agents.shared.prompts import COORDINATOR_PROMPT
 
 router = LLMRouter()
 
-PHASE1_AGENTS = [
-    "country-agent",
-    "sector-agent",
-    "company-agent",
-    "buyer-country-agent",
-    "buyer-sector-agent",
-    "buyer-company-agent",
-]
-
-PHASE1_TIMEOUT_SECONDS = 300
-POLL_INTERVAL_SECONDS = 30
+PHASE1_TIMEOUT_SECONDS = 600  # 10 min — 6 agents × ~60s each, running in parallel
 
 
 def _infer_company_context(company: str, buyer_company: str) -> dict:
-    """Quick LLM call to infer country/sector for both companies."""
+    from agents.shared.llm_utils import extract_json
     prompt = (
         f"Given these two companies involved in an M&A deal:\n"
-        f"Target company: {company}\n"
-        f"Buyer company: {buyer_company}\n\n"
+        f"Target company: {company}\nBuyer company: {buyer_company}\n\n"
         "Return ONLY a JSON object:\n"
         '{\n'
-        f'  "target_country": "Pakistan",\n'
-        f'  "target_sector": "Telecommunications",\n'
-        f'  "buyer_country": "Saudi Arabia",\n'
-        f'  "buyer_sector": "Telecommunications"\n'
+        '  "target_country": "Pakistan",\n'
+        '  "target_sector": "Telecommunications",\n'
+        '  "buyer_country": "Saudi Arabia",\n'
+        '  "buyer_sector": "Telecommunications"\n'
         '}\n'
-        "Use your knowledge to infer the most likely country and sector for each company. Return ONLY JSON."
+        "Infer the most likely home country and primary sector for each company. Return ONLY JSON."
     )
-    response = router.complete(
-        "coordinator",
-        [{"role": "user", "content": prompt}],
-    )
-    from agents.shared.llm_utils import extract_json
     try:
+        response = router.complete("coordinator", [{"role": "user", "content": prompt}])
         return json.loads(extract_json(response))
     except Exception:
-        return {
-            "target_country": "",
-            "target_sector": "",
-            "buyer_country": "",
-            "buyer_sector": "",
-        }
+        return {"target_country": "", "target_sector": "", "buyer_country": "", "buyer_sector": ""}
 
 
 def _get_manifest(assessment_id: str) -> dict:
-    output_dir = Path(os.environ.get("OUTPUT_DIR", "output")) / assessment_id
-    manifest_path = output_dir / "00_assessment_manifest.json"
-    if manifest_path.exists():
-        return json.loads(manifest_path.read_text())
-    return {"completed_agents": {}}
+    path = Path(os.environ.get("OUTPUT_DIR", "output")) / assessment_id / "00_assessment_manifest.json"
+    return json.loads(path.read_text()) if path.exists() else {"completed_agents": {}}
+
+
+def _write_manifest(manifest_path: Path, manifest: dict):
+    manifest_path.write_text(json.dumps(manifest, indent=2))
 
 
 def _assemble_final_report(assessment_id: str, manifest: dict) -> str:
     output_dir = Path(os.environ.get("OUTPUT_DIR", "output")) / assessment_id
     sections = [
-        f"# M&A Assessment Report\n",
+        "# M&A Assessment Report\n",
         f"**Assessment ID:** {assessment_id}",
         f"**Target:** {manifest.get('target_company', '')}",
         f"**Buyer:** {manifest.get('buyer_company', '')}",
@@ -82,15 +63,34 @@ def _assemble_final_report(assessment_id: str, manifest: dict) -> str:
     return "\n".join(sections)
 
 
-async def run_assessment(
+def _run_phase1_agent(fn, args: tuple, agent_name: str, file_index: int, title: str, assessment_id: str):
+    """Run one Phase 1 agent synchronously in a thread and save its output."""
+    try:
+        result = asyncio.run(fn(*args))
+        save_agent_output(
+            assessment_id=assessment_id,
+            agent_name=agent_name,
+            file_index=file_index,
+            title=title,
+            content=result["markdown"],
+            metadata={"confidence": f"{result['confidence']:.0%}"},
+        )
+        return agent_name, result
+    except Exception as e:
+        return agent_name, e
+
+
+def run_assessment_sync(
     assessment_id: str,
     target_company: str,
     buyer_company: str,
     assessment_type: str,
     room_id: str = "",
 ) -> dict:
+    """Fully synchronous pipeline — safe to call from any thread."""
     output_dir = Path(os.environ.get("OUTPUT_DIR", "output")) / assessment_id
     output_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = output_dir / "00_assessment_manifest.json"
 
     # Infer context
     context = _infer_company_context(target_company, buyer_company)
@@ -99,7 +99,6 @@ async def run_assessment(
     buyer_country = context.get("buyer_country", "")
     buyer_sector = context.get("buyer_sector", "")
 
-    # Initialize manifest
     manifest = {
         "assessment_id": assessment_id,
         "buyer_company": buyer_company,
@@ -115,25 +114,9 @@ async def run_assessment(
         "buyer_sector": buyer_sector,
         "room_id": room_id,
     }
-    manifest_path = output_dir / "00_assessment_manifest.json"
-    manifest_path.write_text(json.dumps(manifest, indent=2))
+    _write_manifest(manifest_path, manifest)
 
-    params_base = {
-        "assessment_id": assessment_id,
-        "target_company": target_company,
-        "buyer_company": buyer_company,
-        "country": target_country,
-        "sector": target_sector,
-        "buyer_country": buyer_country,
-        "buyer_sector": buyer_sector,
-        "assessment_type": assessment_type,
-        "room_id": room_id,
-    }
-
-    # PHASE 1: Run all 6 research agents in parallel
-    if room_id:
-        send_to_room(room_id, format_agent_message("coordinator", "PHASE_1", "Dispatching 6 research agents in parallel..."))
-
+    # --- PHASE 1: 6 agents in parallel threads ---
     from agents.country_agent.agent import run_country_assessment
     from agents.sector_agent.agent import run_sector_assessment
     from agents.company_agent.agent import run_company_assessment
@@ -141,55 +124,36 @@ async def run_assessment(
     from agents.buyer_sector_agent.agent import run_buyer_sector_assessment
     from agents.buyer_company_agent.agent import run_buyer_company_assessment
 
-    phase1_tasks = [
-        run_country_assessment(assessment_id, target_company, target_country),
-        run_sector_assessment(assessment_id, target_company, target_sector, target_country),
-        run_company_assessment(assessment_id, target_company, buyer_company),
-        run_buyer_country_assessment(assessment_id, buyer_company, buyer_country, target_country),
-        run_buyer_sector_assessment(assessment_id, buyer_company, buyer_country, buyer_sector, target_country),
-        run_buyer_company_assessment(assessment_id, buyer_company, buyer_country),
+    phase1_work = [
+        (run_country_assessment,       (assessment_id, target_company, target_country),          "country-agent",       1, f"Country Assessment: {target_country}"),
+        (run_sector_assessment,        (assessment_id, target_company, target_sector, target_country), "sector-agent",  2, f"Sector Assessment: {target_sector}"),
+        (run_company_assessment,       (assessment_id, target_company, buyer_company),            "company-agent",       3, f"Company Assessment: {target_company}"),
+        (run_buyer_country_assessment, (assessment_id, buyer_company, buyer_country, target_country), "buyer-country-agent", 4, f"Buyer Country: {buyer_country}"),
+        (run_buyer_sector_assessment,  (assessment_id, buyer_company, buyer_country, buyer_sector, target_country), "buyer-sector-agent", 5, f"Buyer Sector: {buyer_sector}"),
+        (run_buyer_company_assessment, (assessment_id, buyer_company, buyer_country),             "buyer-company-agent", 6, f"Buyer Company: {buyer_company}"),
     ]
 
-    agent_names = [
-        ("country-agent", 1, f"Country Assessment: {target_country}"),
-        ("sector-agent", 2, f"Sector Assessment: {target_sector}"),
-        ("company-agent", 3, f"Company Assessment: {target_company}"),
-        ("buyer-country-agent", 4, f"Buyer Country Assessment: {buyer_country}"),
-        ("buyer-sector-agent", 5, f"Buyer Sector Assessment: {buyer_sector}"),
-        ("buyer-company-agent", 6, f"Buyer Company Assessment: {buyer_company}"),
-    ]
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        futures = {
+            pool.submit(_run_phase1_agent, fn, args, name, idx, title, assessment_id): name
+            for fn, args, name, idx, title in phase1_work
+        }
+        for future in as_completed(futures, timeout=PHASE1_TIMEOUT_SECONDS):
+            agent_name, result = future.result()
+            if not isinstance(result, Exception):
+                manifest = _get_manifest(assessment_id)
+                manifest["completed_agents"][agent_name] = {
+                    "completed_at": datetime.utcnow().isoformat() + "Z"
+                }
+                _write_manifest(manifest_path, manifest)
 
-    try:
-        results = await asyncio.wait_for(
-            asyncio.gather(*phase1_tasks, return_exceptions=True),
-            timeout=PHASE1_TIMEOUT_SECONDS,
-        )
-    except asyncio.TimeoutError:
-        results = [None] * 6
-
-    for i, (result, (agent_name, file_index, title)) in enumerate(zip(results, agent_names)):
-        if result is None or isinstance(result, Exception):
-            continue
-        save_agent_output(
-            assessment_id=assessment_id,
-            agent_name=agent_name,
-            file_index=file_index,
-            title=title,
-            content=result["markdown"],
-            metadata={"confidence": f"{result['confidence']:.0%}"},
-        )
-
-    # Update phase
+    # --- PHASE 2: Risk agent ---
     manifest = _get_manifest(assessment_id)
     manifest["phase"] = "PHASE_2"
-    manifest_path.write_text(json.dumps(manifest, indent=2))
-
-    # PHASE 2: Risk agent
-    if room_id:
-        send_to_room(room_id, format_agent_message("coordinator", "PHASE_2", "Running risk synthesis..."))
+    _write_manifest(manifest_path, manifest)
 
     from agents.risk_agent.agent import run_risk_assessment
-    risk_result = await run_risk_assessment(assessment_id, target_company, buyer_company)
+    risk_result = asyncio.run(run_risk_assessment(assessment_id, target_company, buyer_company))
     save_agent_output(
         assessment_id=assessment_id,
         agent_name="risk-agent",
@@ -199,19 +163,16 @@ async def run_assessment(
         metadata={"rating": risk_result["structured"]["overall_risk_rating"]},
     )
 
-    # Update phase
     manifest = _get_manifest(assessment_id)
     manifest["phase"] = "PHASE_3"
-    manifest_path.write_text(json.dumps(manifest, indent=2))
+    manifest["completed_agents"]["risk-agent"] = {"completed_at": datetime.utcnow().isoformat() + "Z"}
+    _write_manifest(manifest_path, manifest)
 
-    # PHASE 3: Deal rationale agent
-    if room_id:
-        send_to_room(room_id, format_agent_message("coordinator", "PHASE_3", "Generating deal recommendation..."))
-
+    # --- PHASE 3: Deal rationale agent ---
     from agents.deal_rationale_agent.agent import run_deal_rationale
-    deal_result = await run_deal_rationale(
+    deal_result = asyncio.run(run_deal_rationale(
         assessment_id, target_company, buyer_company, target_sector, target_country
-    )
+    ))
     save_agent_output(
         assessment_id=assessment_id,
         agent_name="deal-rationale-agent",
@@ -221,45 +182,38 @@ async def run_assessment(
         metadata={"decision": deal_result["decision"]},
     )
 
-    # PHASE 4: Assemble final report
+    # --- PHASE 4: Assemble final report ---
     manifest = _get_manifest(assessment_id)
     final_report = _assemble_final_report(assessment_id, manifest)
-    report_path = output_dir / "09_full_assessment_report.md"
-    report_path.write_text(final_report)
+    (output_dir / "09_full_assessment_report.md").write_text(final_report)
 
     overall_status = "COMPLETE"
-    for result in [risk_result]:
-        if result["structured"].get("human_review_required"):
-            overall_status = "NEEDS_HUMAN_REVIEW"
-    if deal_result["structured"].get("human_review_required"):
+    if risk_result["structured"].get("human_review_required") or deal_result["structured"].get("human_review_required"):
         overall_status = "NEEDS_HUMAN_REVIEW"
 
     manifest["phase"] = "COMPLETE"
     manifest["overall_status"] = overall_status
     manifest["completed_at"] = datetime.utcnow().isoformat() + "Z"
-    manifest["final_report"] = str(report_path)
     manifest["decision"] = deal_result["decision"]
-    manifest_path.write_text(json.dumps(manifest, indent=2))
-
-    if room_id:
-        summary = (
-            f"Assessment complete! Decision: **{deal_result['decision']}** | "
-            f"Status: {overall_status} | "
-            f"Report: {report_path}"
-        )
-        send_to_room(room_id, format_agent_message("coordinator", "COMPLETE", summary))
+    manifest["completed_agents"]["deal-rationale-agent"] = {"completed_at": datetime.utcnow().isoformat() + "Z"}
+    _write_manifest(manifest_path, manifest)
 
     return manifest
 
 
-def trigger_assessment(
-    buyer_company: str,
-    target_company: str,
-    assessment_type: str = "LEVEL_2",
-    room_id: str = "",
-) -> str:
+# Keep async wrapper for Band compatibility
+async def run_assessment(assessment_id, target_company, buyer_company, assessment_type, room_id=""):
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        None,
+        run_assessment_sync,
+        assessment_id, target_company, buyer_company, assessment_type, room_id,
+    )
+
+
+def trigger_assessment(buyer_company: str, target_company: str, assessment_type: str = "LEVEL_2", room_id: str = "") -> str:
     assessment_id = str(uuid.uuid4())
-    asyncio.run(run_assessment(assessment_id, target_company, buyer_company, assessment_type, room_id))
+    run_assessment_sync(assessment_id, target_company, buyer_company, assessment_type, room_id)
     return assessment_id
 
 
@@ -267,18 +221,12 @@ if __name__ == "__main__":
     try:
         from band import Band
         band = Band(agent_uuid=os.environ["BAND_AGENT_UUID_COORDINATOR"])
-
-        async def handle_message(message: dict):
-            params = json.loads(message.get("content", "{}"))
-            await run_assessment(
-                assessment_id=str(uuid.uuid4()),
-                target_company=params["target_company"],
-                buyer_company=params["buyer_company"],
-                assessment_type=params.get("assessment_type", "LEVEL_2"),
-                room_id=params.get("room_id", ""),
-            )
-
-        band.on_message(lambda msg: asyncio.run(handle_message(msg)))
+        band.on_message(lambda msg: asyncio.run(run_assessment(
+            str(uuid.uuid4()),
+            json.loads(msg.get("content", "{}")).get("target_company", ""),
+            json.loads(msg.get("content", "{}")).get("buyer_company", ""),
+            json.loads(msg.get("content", "{}")).get("assessment_type", "LEVEL_2"),
+        )))
         band.connect()
     except ImportError:
         print("Band SDK not available — run in standalone test mode")

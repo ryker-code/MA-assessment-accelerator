@@ -28,14 +28,14 @@ OUTPUT_DIR = Path(os.environ.get("OUTPUT_DIR", "output"))
 
 
 def _run_assessment_bg(assessment_id: str, target_company: str, buyer_company: str, assessment_type: str):
-    from agents.coordinator.agent import run_assessment
-    asyncio.run(run_assessment(
+    from agents.coordinator.agent import run_assessment_sync
+    run_assessment_sync(
         assessment_id=assessment_id,
         target_company=target_company,
         buyer_company=buyer_company,
         assessment_type=assessment_type,
         room_id="",
-    ))
+    )
 
 
 @app.post("/assessments")

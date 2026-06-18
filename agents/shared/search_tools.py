@@ -16,7 +16,7 @@ def web_search(query: str, agent_type: str = "default", max_results: int = 5) ->
     results = client.search(
         query=query,
         max_results=max_results,
-        search_depth="advanced",
+        search_depth="basic",
         include_domains=domains,
     )
     return results.get("results", [])

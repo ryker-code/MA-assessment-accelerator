@@ -111,7 +111,7 @@ class LLMRouter:
     def _call_openai_compat(self, model, messages, system_prompt, temperature, max_tokens, base_url, api_key) -> str:
         from openai import OpenAI
 
-        client = OpenAI(api_key=api_key, base_url=base_url)
+        client = OpenAI(api_key=api_key, base_url=base_url, timeout=120.0)
         full_messages = []
         if system_prompt:
             full_messages.append({"role": "system", "content": system_prompt})

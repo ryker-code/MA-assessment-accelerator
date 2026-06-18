@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M&A Assessment Accelerator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface2: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #14b8a6;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
+    .logo-text { font-size: 18px; font-weight: 600; }
+    .band-link { color: var(--accent); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+    .band-link:hover { text-decoration: underline; }
+
+    main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+    /* Input section */
+    #input-section { max-width: 600px; margin: 0 auto; }
+    .section-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .section-sub { color: var(--muted); margin-bottom: 32px; font-size: 14px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    input[type="text"] {
+      width: 100%; padding: 12px 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 15px; font-family: inherit;
+      outline: none; transition: border-color 0.2s;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+    .radio-group { display: flex; gap: 12px; }
+    .radio-option {
+      flex: 1; padding: 12px 16px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; gap: 10px; font-size: 13px; transition: border-color 0.2s;
+    }
+    .radio-option.selected { border-color: var(--accent); background: rgba(20,184,166,0.08); }
+    .radio-option input { accent-color: var(--accent); }
+    .btn-primary {
+      width: 100%; padding: 14px; background: var(--accent); color: white;
+      border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.2s; font-family: inherit;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Pipeline */
+    #pipeline-section { display: none; }
+    .assessment-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+    .assessment-title { font-size: 20px; font-weight: 600; }
+    .assessment-meta { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .status-badge {
+      padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .status-IN_PROGRESS { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .status-COMPLETE { background: rgba(34,197,94,0.15); color: var(--success); }
+    .status-NEEDS_HUMAN_REVIEW { background: rgba(239,68,68,0.15); color: var(--error); }
+
+    .pipeline-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px;
+    }
+    .agent-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px; transition: all 0.3s;
+    }
+    .agent-card.running { border-color: var(--accent); animation: pulse-border 2s infinite; }
+    .agent-card.complete { border-color: var(--success); background: rgba(34,197,94,0.05); }
+    .agent-card.error { border-color: var(--error); }
+    @keyframes pulse-border {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(20,184,166,0.3); }
+      50% { box-shadow: 0 0 0 4px rgba(20,184,166,0.1); }
+    }
+    .agent-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .agent-role { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+    .agent-status-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
+    }
+    .badge-WAITING { background: var(--surface2); color: var(--muted); }
+    .badge-RUNNING { background: rgba(20,184,166,0.2); color: var(--accent); }
+    .badge-COMPLETE { background: rgba(34,197,94,0.2); color: var(--success); }
+    .badge-ERROR { background: rgba(239,68,68,0.2); color: var(--error); }
+    .agent-time { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* Tabs */
+    #results-section { display: none; }
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 24px; overflow-x: auto; }
+    .tab {
+      padding: 10px 18px; font-size: 13px; font-weight: 500; color: var(--muted);
+      border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent;
+      white-space: nowrap; transition: all 0.2s; font-family: inherit;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Markdown rendering */
+    .md-content {
+      background: var(--surface); border-radius: 10px; padding: 24px;
+      line-height: 1.7; font-size: 14px;
+    }
+    .md-content h1 { font-size: 22px; margin-bottom: 16px; }
+    .md-content h2 { font-size: 18px; margin: 20px 0 10px; color: var(--accent); }
+    .md-content h3 { font-size: 15px; margin: 16px 0 8px; color: var(--text); }
+    .md-content h4 { font-size: 14px; margin: 12px 0 6px; color: var(--muted); }
+    .md-content p { margin-bottom: 12px; }
+    .md-content ul, .md-content ol { padding-left: 20px; margin-bottom: 12px; }
+    .md-content li { margin-bottom: 4px; }
+    .md-content table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
+    .md-content th { background: var(--surface2); padding: 8px 12px; text-align: left; border: 1px solid var(--border); }
+    .md-content td { padding: 8px 12px; border: 1px solid var(--border); }
+    .md-content tr:nth-child(even) td { background: rgba(51,65,85,0.3); }
+    .md-content code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .md-content hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .md-content strong { color: var(--text); }
+
+    /* Decision badge */
+    .decision-banner {
+      padding: 24px; border-radius: 12px; text-align: center; margin-bottom: 24px;
+    }
+    .decision-GO { background: rgba(34,197,94,0.15); border: 2px solid var(--success); }
+    .decision-NO_GO { background: rgba(239,68,68,0.15); border: 2px solid var(--error); }
+    .decision-REVISIT { background: rgba(245,158,11,0.15); border: 2px solid var(--warning); }
+    .decision-label { font-size: 36px; font-weight: 700; letter-spacing: 0.05em; }
+    .decision-GO .decision-label { color: var(--success); }
+    .decision-NO_GO .decision-label { color: var(--error); }
+    .decision-REVISIT .decision-label { color: var(--warning); }
+    .decision-sub { font-size: 14px; color: var(--muted); margin-top: 6px; }
+
+    /* Risk matrix */
+    .risk-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-bottom: 24px; max-width: 360px; }
+    .risk-cell {
+      height: 80px; border-radius: 6px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; font-size: 11px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase;
+    }
+    .cell-HH { background: rgba(239,68,68,0.3); color: var(--error); }
+    .cell-HM { background: rgba(239,68,68,0.15); color: #fc8181; }
+    .cell-HL { background: rgba(245,158,11,0.2); color: var(--warning); }
+    .cell-MH { background: rgba(245,158,11,0.2); color: var(--warning); }
+    .cell-MM { background: rgba(245,158,11,0.1); color: #fbbf24; }
+    .cell-ML { background: rgba(34,197,94,0.1); color: #86efac; }
+    .cell-LH { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .cell-LM { background: rgba(34,197,94,0.1); color: #86efac; }
+    .cell-LL { background: rgba(34,197,94,0.2); color: var(--success); }
+    .risk-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; margin: 2px; }
+    .matrix-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+
+    /* Valuation bar */
+    .valuation-bar-wrap { margin: 16px 0; }
+    .valuation-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .valuation-track { height: 20px; background: var(--surface2); border-radius: 10px; position: relative; }
+    .valuation-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--accent), var(--success)); }
+    .valuation-range { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .loading { color: var(--muted); font-size: 14px; padding: 32px; text-align: center; }
+    .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #new-assessment-btn {
+      padding: 10px 20px; background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); border-radius: 8px; cursor: pointer; font-size: 14px; font-family: inherit;
+      margin-bottom: 24px;
+    }
+    #new-assessment-btn:hover { border-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">M&A</div>
+    <div class="logo-text">M&amp;A Assessment Accelerator</div>
+  </div>
+  <a id="band-room-link" class="band-link" href="#" target="_blank" style="display:none">
+    Watch agents collaborate in real-time →
+  </a>
+</header>
+
+<main>
+
+  <!-- Input Section -->
+  <div id="input-section">
+    <div class="section-title">Start New Assessment</div>
+    <div class="section-sub">Enter the acquirer and target to launch a 9-agent M&A analysis</div>
+
+    <div class="form-group">
+      <label>Acquirer / Buy-Side Company</label>
+      <input type="text" id="buyer-input" placeholder="e.g. stc — Saudi Telecom Company" />
+    </div>
+    <div class="form-group">
+      <label>Target / Sell-Side Company</label>
+      <input type="text" id="target-input" placeholder="e.g. Telenor Pakistan" />
+    </div>
+    <div class="form-group">
+      <label>Assessment Type</label>
+      <div class="radio-group">
+        <label class="radio-option selected" id="radio-l1">
+          <input type="radio" name="assessment_type" value="LEVEL_1" /> Level 1 — Ongoing Monitoring
+        </label>
+        <label class="radio-option" id="radio-l2">
+          <input type="radio" name="assessment_type" value="LEVEL_2" /> Level 2 — Near-term Opportunity
+        </label>
+      </div>
+    </div>
+    <button class="btn-primary" id="start-btn" onclick="startAssessment()">Start Assessment</button>
+  </div>
+
+  <!-- Pipeline Section -->
+  <div id="pipeline-section">
+    <button id="new-assessment-btn" onclick="resetToInput()">← New Assessment</button>
+
+    <div class="assessment-header">
+      <div>
+        <div class="assessment-title" id="assessment-title">Assessment in progress...</div>
+        <div class="assessment-meta" id="assessment-meta"></div>
+      </div>
+      <div class="status-badge status-IN_PROGRESS" id="overall-status-badge">IN PROGRESS</div>
+    </div>
+
+    <div class="pipeline-grid" id="pipeline-grid"></div>
+  </div>
+
+  <!-- Results Section -->
+  <div id="results-section">
+    <div class="tabs" id="tabs-bar"></div>
+    <div id="tabs-content"></div>
+  </div>
+
+</main>
+
+<script>
+// === Constants ===
+const BAND_ROOM_URL = ''; // Set to your Band room URL if available
+
+const AGENTS = [
+  { id: 'country-agent',        label: '@country-agent',        role: 'Target Country Research',   phase: 1 },
+  { id: 'sector-agent',         label: '@sector-agent',         role: 'Target Sector Research',    phase: 1 },
+  { id: 'company-agent',        label: '@company-agent',        role: 'Target Company Research',   phase: 1 },
+  { id: 'buyer-country-agent',  label: '@buyer-country-agent',  role: 'Buyer Country Research',    phase: 1 },
+  { id: 'buyer-sector-agent',   label: '@buyer-sector-agent',   role: 'Buyer Sector Research',     phase: 1 },
+  { id: 'buyer-company-agent',  label: '@buyer-company-agent',  role: 'Buyer Company Research',    phase: 1 },
+  { id: 'risk-agent',           label: '@risk-agent',           role: 'Risk Synthesis',            phase: 2 },
+  { id: 'deal-rationale-agent', label: '@deal-rationale-agent', role: 'Deal Recommendation',      phase: 3 },
+  { id: 'coordinator',          label: '@coordinator',          role: 'Orchestrator',              phase: 0 },
+];
+
+const AGENT_FILES = {
+  'country-agent':        { index: '01', tabGroup: 0 },
+  'sector-agent':         { index: '02', tabGroup: 0 },
+  'company-agent':        { index: '03', tabGroup: 1 },
+  'buyer-country-agent':  { index: '04', tabGroup: 2 },
+  'buyer-sector-agent':   { index: '05', tabGroup: 2 },
+  'buyer-company-agent':  { index: '06', tabGroup: 2 },
+  'risk-agent':           { index: '07', tabGroup: 3 },
+  'deal-rationale-agent': { index: '08', tabGroup: 4 },
+};
+
+const TAB_DEFS = [
+  { id: 'tab-sell-country',  label: 'Sell-Side: Country/Sector',  agents: ['country-agent','sector-agent'] },
+  { id: 'tab-sell-company',  label: 'Sell-Side: Company',         agents: ['company-agent'] },
+  { id: 'tab-buy-side',      label: 'Buy-Side',                   agents: ['buyer-country-agent','buyer-sector-agent','buyer-company-agent'] },
+  { id: 'tab-risk',          label: 'Risk Assessment',            agents: ['risk-agent'] },
+  { id: 'tab-decision',      label: 'Deal Recommendation',        agents: ['deal-rationale-agent'] },
+];
+
+// === State ===
+let currentAssessmentId = null;
+let pollTimer = null;
+let renderedTabs = new Set();
+let tabContents = {}; // tabId -> markdown strings array
+let agentStartTimes = {};
+let manifest = null;
+
+// === UI helpers ===
+function show(id) { document.getElementById(id).style.display = ''; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+function renderPipelineGrid(completedAgents, currentPhase) {
+  const grid = document.getElementById('pipeline-grid');
+  grid.innerHTML = AGENTS.map(agent => {
+    const completed = completedAgents && completedAgents[agent.id];
+    const isRunning = !completed && isAgentRunning(agent, currentPhase, completedAgents);
+    let cardClass = 'agent-card';
+    let badgeClass = 'badge-WAITING';
+    let badgeText = 'WAITING';
+    let timeText = '';
+
+    if (completed) {
+      cardClass += ' complete';
+      badgeClass = 'badge-COMPLETE';
+      badgeText = 'COMPLETE';
+      if (completed.completed_at) {
+        const start = agentStartTimes[agent.id] || completed.completed_at;
+        timeText = `Completed`;
+      }
+    } else if (isRunning) {
+      cardClass += ' running';
+      badgeClass = 'badge-RUNNING';
+      badgeText = 'RUNNING';
+      agentStartTimes[agent.id] = agentStartTimes[agent.id] || Date.now();
+    }
+
+    return `
+      <div class="${cardClass}" id="card-${agent.id}">
+        <div class="agent-name">${agent.label}</div>
+        <div class="agent-role">${agent.role}</div>
+        <span class="agent-status-badge ${badgeClass}">${badgeText}</span>
+        ${timeText ? `<div class="agent-time">${timeText}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function isAgentRunning(agent, phase, completedAgents) {
+  if (agent.id === 'coordinator') return phase !== 'COMPLETE';
+  if (agent.phase === 1) return phase === 'PHASE_1' || phase === 'PHASE_2' || phase === 'PHASE_3';
+  if (agent.phase === 2) return phase === 'PHASE_2';
+  if (agent.phase === 3) return phase === 'PHASE_3';
+  return false;
+}
+
+// === API calls ===
+async function startAssessment() {
+  const buyer = document.getElementById('buyer-input').value.trim();
+  const target = document.getElementById('target-input').value.trim();
+  const type = document.querySelector('input[name="assessment_type"]:checked')?.value || 'LEVEL_2';
+  if (!buyer || !target) { alert('Please enter both companies'); return; }
+
+  const btn = document.getElementById('start-btn');
+  btn.disabled = true; btn.textContent = 'Starting...';
+
+  try {
+    const resp = await fetch('/assessments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ buyer_company: buyer, target_company: target, assessment_type: type }),
+    });
+    const data = await resp.json();
+    currentAssessmentId = data.assessment_id;
+
+    document.getElementById('assessment-title').textContent = `${buyer} → ${target}`;
+    document.getElementById('assessment-meta').textContent = `ID: ${currentAssessmentId} · ${type}`;
+
+    if (BAND_ROOM_URL) {
+      const link = document.getElementById('band-room-link');
+      link.href = BAND_ROOM_URL; link.style.display = '';
+    }
+
+    hide('input-section');
+    show('pipeline-section');
+    renderPipelineGrid({}, 'PHASE_1');
+    startPolling();
+  } catch (e) {
+    alert('Failed to start assessment: ' + e.message);
+    btn.disabled = false; btn.textContent = 'Start Assessment';
+  }
+}
+
+function startPolling() {
+  pollTimer = setInterval(poll, 5000);
+  poll();
+}
+
+async function poll() {
+  if (!currentAssessmentId) return;
+  try {
+    const resp = await fetch(`/assessments/${currentAssessmentId}`);
+    manifest = await resp.json();
+    if (manifest.status === 'not_found') return;
+    updateUI(manifest);
+    if (manifest.overall_status === 'COMPLETE' || manifest.overall_status === 'NEEDS_HUMAN_REVIEW') {
+      clearInterval(pollTimer);
+    }
+  } catch (e) { /* network hiccup */ }
+}
+
+async function updateUI(manifest) {
+  // Update overall status badge
+  const badge = document.getElementById('overall-status-badge');
+  badge.textContent = manifest.overall_status || 'IN_PROGRESS';
+  badge.className = 'status-badge status-' + (manifest.overall_status || 'IN_PROGRESS');
+
+  // Update pipeline grid
+  renderPipelineGrid(manifest.completed_agents || {}, manifest.phase || 'PHASE_1');
+
+  // Fetch and render newly completed agent files
+  const completed = manifest.completed_agents || {};
+  for (const [agentId, info] of Object.entries(completed)) {
+    const agentDef = AGENT_FILES[agentId];
+    if (!agentDef || renderedTabs.has(agentId)) continue;
+    renderedTabs.add(agentId);
+    const filename = `${agentDef.index}_${agentId.replace(/-/g, '_')}.md`;
+    try {
+      const r = await fetch(`/assessments/${currentAssessmentId}/files/${filename}`);
+      const fileData = await r.json();
+      addContentToTab(agentDef.tabGroup, agentId, fileData.content);
+    } catch (e) {}
+  }
+}
+
+function addContentToTab(tabIdx, agentId, content) {
+  const tabDef = TAB_DEFS[tabIdx];
+  if (!tabContents[tabIdx]) tabContents[tabIdx] = [];
+  tabContents[tabIdx].push(content);
+  renderTab(tabIdx, tabDef, tabContents[tabIdx]);
+}
+
+function renderTab(tabIdx, tabDef, contentParts) {
+  const tabsBar = document.getElementById('tabs-bar');
+  const tabsContent = document.getElementById('tabs-content');
+  show('results-section');
+
+  // Ensure tab button exists
+  if (!document.getElementById(tabDef.id + '-btn')) {
+    const btn = document.createElement('button');
+    btn.className = 'tab'; btn.id = tabDef.id + '-btn';
+    btn.textContent = tabDef.label;
+    btn.onclick = () => activateTab(tabIdx, tabDef);
+    tabsBar.appendChild(btn);
+
+    const pane = document.createElement('div');
+    pane.className = 'tab-content'; pane.id = tabDef.id + '-pane';
+    tabsContent.appendChild(pane);
+
+    // Activate first tab automatically
+    if (tabsBar.querySelectorAll('.tab').length === 1) activateTab(tabIdx, tabDef);
+  }
+
+  const pane = document.getElementById(tabDef.id + '-pane');
+  const combined = contentParts.join('\n\n---\n\n');
+
+  if (tabIdx === 4) {
+    // Decision tab — special rendering
+    pane.innerHTML = renderDecisionTab(combined, manifest);
+  } else if (tabIdx === 3) {
+    // Risk tab — add matrix
+    pane.innerHTML = renderRiskTab(combined);
+  } else {
+    pane.innerHTML = `<div class="md-content">${marked.parse(combined)}</div>`;
+  }
+}
+
+function renderDecisionTab(content, manifest) {
+  const decision = manifest?.decision || 'REVISIT';
+  const decisionLabels = { GO: '✅ GO', NO_GO: '❌ NO-GO', REVISIT: '⏳ REVISIT' };
+  const val = manifest?.implied_valuation_range_usd_m || {};
+  const low = val.low || 0; const high = val.high || 0;
+
+  let html = `
+    <div class="decision-banner decision-${decision}">
+      <div class="decision-label">${decisionLabels[decision] || decision}</div>
+      <div class="decision-sub">Strategic Fit Score: ${manifest?.strategic_fit_score?.toFixed(1) || '—'}/10</div>
+    </div>`;
+
+  if (high > 0) {
+    const pct = Math.min(100, ((high - low) / high) * 100);
+    html += `
+      <div class="valuation-bar-wrap">
+        <div class="valuation-label">Implied Enterprise Value Range</div>
+        <div class="valuation-track"><div class="valuation-fill" style="width:${pct}%"></div></div>
+        <div class="valuation-range"><span>USD ${low.toLocaleString()}m</span><span>USD ${high.toLocaleString()}m</span></div>
+      </div>`;
+  }
+
+  html += `<div class="md-content">${marked.parse(content)}</div>`;
+  return html;
+}
+
+function renderRiskTab(content) {
+  const severities = ['HIGH', 'MEDIUM', 'LOW'];
+  const probabilities = ['HIGH', 'MEDIUM', 'LOW'];
+  let matrixHtml = '<div class="matrix-label">Risk Matrix (Severity × Probability)</div><div class="risk-matrix">';
+  for (const s of severities) {
+    for (const p of probabilities) {
+      matrixHtml += `<div class="risk-cell cell-${s[0]}${p[0]}"><span>${s[0]}/${p[0]}</span></div>`;
+    }
+  }
+  matrixHtml += '</div>';
+  return matrixHtml + `<div class="md-content">${marked.parse(content)}</div>`;
+}
+
+function activateTab(tabIdx, tabDef) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
+  const btn = document.getElementById(tabDef.id + '-btn');
+  const pane = document.getElementById(tabDef.id + '-pane');
+  if (btn) btn.classList.add('active');
+  if (pane) pane.classList.add('active');
+}
+
+function resetToInput() {
+  clearInterval(pollTimer);
+  currentAssessmentId = null; renderedTabs = new Set(); tabContents = {}; agentStartTimes = {}; manifest = null;
+  document.getElementById('tabs-bar').innerHTML = '';
+  document.getElementById('tabs-content').innerHTML = '';
+  document.getElementById('buyer-input').value = '';
+  document.getElementById('target-input').value = '';
+  const btn = document.getElementById('start-btn');
+  btn.disabled = false; btn.textContent = 'Start Assessment';
+  hide('pipeline-section'); hide('results-section'); show('input-section');
+}
+
+// Radio button styling
+document.querySelectorAll('input[name="assessment_type"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    document.querySelectorAll('.radio-option').forEach(opt => opt.classList.remove('selected'));
+    radio.parentElement.classList.add('selected');
+  });
+});
+</script>
+</body>
+</html>

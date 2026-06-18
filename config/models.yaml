@@ -1,0 +1,71 @@
+# config/models.yaml
+# Change any model here — no code changes required.
+
+agents:
+  coordinator:
+    provider: google_gemini
+    model: gemma-4-31b-it
+    temperature: 0.2
+    max_tokens: 2048
+    use_cache: true
+
+  country_agent:
+    provider: featherless
+    model: Qwen/Qwen3-14B
+    temperature: 0.3
+    max_tokens: 4096
+    use_cache: true
+
+  sector_agent:
+    provider: featherless
+    model: Qwen/Qwen3-14B
+    temperature: 0.3
+    max_tokens: 4096
+    use_cache: true
+
+  company_agent:
+    provider: google_gemini
+    model: gemma-4-31b-it
+    temperature: 0.2
+    max_tokens: 6000
+    use_cache: true
+
+  buyer_country_agent:
+    provider: featherless
+    model: Qwen/Qwen3-14B
+    temperature: 0.3
+    max_tokens: 4096
+    use_cache: true
+
+  buyer_sector_agent:
+    provider: featherless
+    model: Qwen/Qwen3-14B
+    temperature: 0.3
+    max_tokens: 4096
+    use_cache: true
+
+  buyer_company_agent:
+    provider: featherless
+    model: Qwen/Qwen3-14B
+    temperature: 0.2
+    max_tokens: 4096
+    use_cache: true
+
+  risk_agent:
+    provider: featherless
+    model: deepseek-ai/DeepSeek-R1
+    temperature: 0.1
+    max_tokens: 4096
+    use_cache: true
+
+  deal_rationale_agent:
+    provider: google_gemini
+    model: gemma-4-31b-it
+    temperature: 0.2
+    max_tokens: 8000
+    use_cache: false   # Always fresh for final synthesis
+
+# Swap example — to use AI/ML API for company_agent:
+# company_agent:
+#   provider: aiml_api
+#   model: gpt-4o

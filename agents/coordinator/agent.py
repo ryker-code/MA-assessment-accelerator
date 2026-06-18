@@ -8,22 +8,22 @@ from pathlib import Path
 
 from agents.shared.llm_router import LLMRouter
 from agents.shared.markdown_writer import save_agent_output
-from agents.shared.band_utils import send_to_room, format_agent_message
+from agents.shared.band_utils import post_as_agent, format_agent_message, create_assessment_room
 
 router = LLMRouter()
 
 PHASE1_TIMEOUT_SECONDS = 600  # 10 min — 6 agents × ~60s each, running in parallel
 
 
-def _post_to_band(room_id: str, agent: str, status: str, message: str):
-    """Post a message to the Band room if room_id is available."""
-    rid = room_id or os.environ.get("BAND_ROOM_ID", "")
-    if not rid:
+def _post_to_band(room_id: str, sender: str, status: str, message: str, mention_agents: list = None):
+    """Post to Band room as a specific agent. Best-effort — never raises."""
+    if not room_id:
         return
     try:
-        send_to_room(rid, format_agent_message(agent, status, message))
+        content = format_agent_message(sender, status, message)
+        post_as_agent(sender, room_id, content, mention_agents=mention_agents)
     except Exception:
-        pass  # Band messaging is best-effort
+        pass
 
 
 def _make_partial_risk(assessment_id, target_company, buyer_company, error_msg):
@@ -116,7 +116,7 @@ def _assemble_final_report(assessment_id: str, manifest: dict) -> str:
     return "\n".join(sections)
 
 
-def _run_phase1_agent(fn, args: tuple, agent_name: str, file_index: int, title: str, assessment_id: str):
+def _run_phase1_agent(fn, args: tuple, agent_name: str, file_index: int, title: str, assessment_id: str, room_id: str = ""):
     """Run one Phase 1 agent synchronously in a thread and save its output."""
     try:
         result = asyncio.run(fn(*args))
@@ -128,13 +128,14 @@ def _run_phase1_agent(fn, args: tuple, agent_name: str, file_index: int, title: 
             content=result["markdown"],
             metadata={"confidence": f"{result['confidence']:.0%}"},
         )
-        room_id = os.environ.get("BAND_ROOM_ID", "")
         _post_to_band(room_id, agent_name, "COMPLETE",
-            f"Completed — confidence: {result['confidence']:.0%} | sources: {len(result.get('sources', []))}")
+            f"Analysis complete — confidence {result['confidence']:.0%}, "
+            f"{len(result.get('sources', []))} sources consulted.",
+            mention_agents=["coordinator"])
         return agent_name, result
     except Exception as e:
-        room_id = os.environ.get("BAND_ROOM_ID", "")
-        _post_to_band(room_id, agent_name, "ERROR", f"Failed: {str(e)[:100]}")
+        _post_to_band(room_id, agent_name, "ERROR", f"Analysis failed: {str(e)[:120]}",
+            mention_agents=["coordinator"])
         return agent_name, e
 
 
@@ -157,6 +158,10 @@ def run_assessment_sync(
     buyer_country = context.get("buyer_country", "")
     buyer_sector = context.get("buyer_sector", "")
 
+    # Auto-create a Band room if none provided
+    if not room_id:
+        room_id = create_assessment_room()
+
     manifest = {
         "assessment_id": assessment_id,
         "buyer_company": buyer_company,
@@ -171,15 +176,17 @@ def run_assessment_sync(
         "buyer_country": buyer_country,
         "buyer_sector": buyer_sector,
         "room_id": room_id,
+        "band_room_url": f"https://app.band.ai/chat/{room_id}" if room_id else "",
     }
     _write_manifest(manifest_path, manifest)
 
     _post_to_band(room_id, "coordinator", "PHASE_1_START",
-        f"Assessment started: **{buyer_company}** acquiring **{target_company}** ({assessment_type})\n"
-        f"Target: {target_company} ({target_country}, {target_sector})\n"
-        f"Buyer: {buyer_company} ({buyer_country}, {buyer_sector})\n"
-        "Dispatching 6 research agents in parallel: @country-agent @sector-agent @company-agent "
-        "@buyer-country-agent @buyer-sector-agent @buyer-company-agent")
+        f"M&A Assessment initiated: {buyer_company} acquiring {target_company} ({assessment_type})\n"
+        f"Target: {target_company} | {target_country} | {target_sector}\n"
+        f"Buyer: {buyer_company} | {buyer_country} | {buyer_sector}\n"
+        f"Dispatching 6 parallel research agents now.",
+        mention_agents=["country-agent", "sector-agent", "company-agent",
+                        "buyer-country-agent", "buyer-sector-agent", "buyer-company-agent"])
 
     # --- PHASE 1: 6 agents in parallel threads ---
     from agents.country_agent.agent import run_country_assessment
@@ -202,7 +209,7 @@ def run_assessment_sync(
     with ThreadPoolExecutor(max_workers=6) as pool:
         futures = {}
         for i, (fn, args, name, idx, title) in enumerate(phase1_work):
-            futures[pool.submit(_run_phase1_agent, fn, args, name, idx, title, assessment_id)] = name
+            futures[pool.submit(_run_phase1_agent, fn, args, name, idx, title, assessment_id, room_id)] = name
             if i < len(phase1_work) - 1:
                 _time.sleep(0.5)  # stagger submissions to avoid Featherless rate limits
         for future in as_completed(futures, timeout=PHASE1_TIMEOUT_SECONDS):
@@ -214,7 +221,10 @@ def run_assessment_sync(
                 }
                 _write_manifest(manifest_path, manifest)
 
-    _post_to_band(room_id, "coordinator", "PHASE_2_START", "Phase 1 complete. Running cross-workstream risk synthesis (@risk-agent)...")
+    _post_to_band(room_id, "coordinator", "PHASE_2_START",
+        f"Phase 1 complete. {len(manifest.get('completed_agents', {}))} research agents finished. "
+        f"Running cross-workstream risk synthesis now.",
+        mention_agents=["risk-agent"])
 
     # --- PHASE 2: Risk agent ---
     manifest = _get_manifest(assessment_id)
@@ -242,7 +252,11 @@ def run_assessment_sync(
     _write_manifest(manifest_path, manifest)
 
     _post_to_band(room_id, "risk-agent", "COMPLETE",
-        f"Risk rating: {risk_result['structured']['overall_risk_rating']} — running deal rationale (@deal-rationale-agent)...")
+        f"Risk synthesis complete. Overall rating: {risk_result['structured']['overall_risk_rating']}. "
+        f"{len(risk_result['structured'].get('risks', []))} risks identified, "
+        f"{len(risk_result['structured'].get('cross_workstream_insights', []))} cross-workstream insights. "
+        f"Handing off to deal rationale agent.",
+        mention_agents=["deal-rationale-agent"])
 
     # --- PHASE 3: Deal rationale agent ---
     from agents.deal_rationale_agent.agent import run_deal_rationale_sync
@@ -283,10 +297,17 @@ def run_assessment_sync(
     manifest["completed_agents"]["deal-rationale-agent"] = {"completed_at": datetime.utcnow().isoformat() + "Z"}
     _write_manifest(manifest_path, manifest)
 
-    _post_to_band(room_id, "coordinator", "COMPLETE",
-        f"Assessment complete. Decision: **{deal_result['decision']}** | "
+    _post_to_band(room_id, "deal-rationale-agent", "COMPLETE",
+        f"Deal rationale complete. Recommendation: {deal_result['decision']} | "
         f"Strategic fit: {deal_result['structured'].get('strategic_fit_score', 'N/A')}/10 | "
-        f"Risk: {risk_result['structured']['overall_risk_rating']}")
+        f"Implied EV: USD {deal_structured.get('implied_valuation_range_usd_m', {}).get('low', '?')}m"
+        f"–{deal_structured.get('implied_valuation_range_usd_m', {}).get('high', '?')}m",
+        mention_agents=["coordinator"])
+    _post_to_band(room_id, "coordinator", "ASSESSMENT_COMPLETE",
+        f"All 9 agents have completed the M&A assessment for {buyer_company} / {target_company}.\n"
+        f"Final decision: {deal_result['decision']} | Risk: {risk_result['structured']['overall_risk_rating']} | "
+        f"Strategic fit: {deal_result['structured'].get('strategic_fit_score', 'N/A')}/10",
+        mention_agents=["deal-rationale-agent"])
 
     return manifest
 

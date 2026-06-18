@@ -1,0 +1,35 @@
+coordinator:
+  agent_id: "your-coordinator-uuid"
+  api_key: "your-coordinator-api-key"
+
+country_agent:
+  agent_id: "your-country-agent-uuid"
+  api_key: "your-country-agent-api-key"
+
+sector_agent:
+  agent_id: "your-sector-agent-uuid"
+  api_key: "your-sector-agent-api-key"
+
+company_agent:
+  agent_id: "your-company-agent-uuid"
+  api_key: "your-company-agent-api-key"
+
+buyer_country_agent:
+  agent_id: "your-buyer-country-agent-uuid"
+  api_key: "your-buyer-country-agent-api-key"
+
+buyer_sector_agent:
+  agent_id: "your-buyer-sector-agent-uuid"
+  api_key: "your-buyer-sector-agent-api-key"
+
+buyer_company_agent:
+  agent_id: "your-buyer-company-agent-uuid"
+  api_key: "your-buyer-company-agent-api-key"
+
+risk_agent:
+  agent_id: "your-risk-agent-uuid"
+  api_key: "your-risk-agent-api-key"
+
+deal_rationale_agent:
+  agent_id: "your-deal-rationale-agent-uuid"
+  api_key: "your-deal-rationale-agent-api-key"

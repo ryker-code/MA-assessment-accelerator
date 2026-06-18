@@ -207,6 +207,11 @@ async def handle_message(message: dict):
     )
 
 
+def run_deal_rationale_sync(assessment_id, target_company, buyer_company, sector="", target_country="") -> dict:
+    """Synchronous wrapper — safe to call from a non-async thread."""
+    return asyncio.run(run_deal_rationale(assessment_id, target_company, buyer_company, sector, target_country))
+
+
 if __name__ == "__main__":
     try:
         from band import Band

@@ -15,6 +15,59 @@ router = LLMRouter()
 PHASE1_TIMEOUT_SECONDS = 600  # 10 min — 6 agents × ~60s each, running in parallel
 
 
+def _post_to_band(room_id: str, agent: str, status: str, message: str):
+    """Post a message to the Band room if room_id is available."""
+    rid = room_id or os.environ.get("BAND_ROOM_ID", "")
+    if not rid:
+        return
+    try:
+        send_to_room(rid, format_agent_message(agent, status, message))
+    except Exception:
+        pass  # Band messaging is best-effort
+
+
+def _make_partial_risk(assessment_id, target_company, buyer_company, error_msg):
+    from datetime import datetime
+    from agents.shared.markdown_writer import _format_markdown_fallback
+    structured = {
+        "agent": "risk-agent", "assessment_id": assessment_id,
+        "target_company": target_company, "buyer_company": buyer_company,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "status": "PARTIAL", "confidence_score": 0.1,
+        "human_review_required": True,
+        "overall_risk_rating": "AMBER", "risks": [], "cross_workstream_insights": [],
+        "data_sources": [],
+    }
+    return {
+        "structured": structured,
+        "markdown": f"## Risk Assessment — PARTIAL\n\nAgent failed: {error_msg[:200]}\n\nHuman review required.",
+        "confidence": 0.1,
+    }
+
+
+def _make_partial_deal(assessment_id, target_company, buyer_company, error_msg):
+    from datetime import datetime
+    structured = {
+        "agent": "deal-rationale-agent", "assessment_id": assessment_id,
+        "target_company": target_company, "buyer_company": buyer_company,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "status": "PARTIAL", "confidence_score": 0.1,
+        "human_review_required": True,
+        "decision": "REVISIT", "revisit_timeframe": "Pending manual review",
+        "decision_rationale": [f"Automated synthesis failed: {error_msg[:200]}"],
+        "value_creation_avenues": [], "ev_ebitda_comparable_range": {},
+        "implied_valuation_range_usd_m": {}, "key_conditions_for_reversal": [],
+        "recommended_next_steps": ["Re-run assessment or complete manually"],
+        "strategic_fit_score": 5.0, "data_sources": [],
+    }
+    return {
+        "structured": structured,
+        "markdown": f"## Deal Rationale — PARTIAL\n\nAgent failed: {error_msg[:200]}\n\nHuman review required.",
+        "confidence": 0.1,
+        "decision": "REVISIT",
+    }
+
+
 def _infer_company_context(company: str, buyer_company: str) -> dict:
     from agents.shared.llm_utils import extract_json
     prompt = (
@@ -75,8 +128,13 @@ def _run_phase1_agent(fn, args: tuple, agent_name: str, file_index: int, title: 
             content=result["markdown"],
             metadata={"confidence": f"{result['confidence']:.0%}"},
         )
+        room_id = os.environ.get("BAND_ROOM_ID", "")
+        _post_to_band(room_id, agent_name, "COMPLETE",
+            f"Completed — confidence: {result['confidence']:.0%} | sources: {len(result.get('sources', []))}")
         return agent_name, result
     except Exception as e:
+        room_id = os.environ.get("BAND_ROOM_ID", "")
+        _post_to_band(room_id, agent_name, "ERROR", f"Failed: {str(e)[:100]}")
         return agent_name, e
 
 
@@ -116,6 +174,13 @@ def run_assessment_sync(
     }
     _write_manifest(manifest_path, manifest)
 
+    _post_to_band(room_id, "coordinator", "PHASE_1_START",
+        f"Assessment started: **{buyer_company}** acquiring **{target_company}** ({assessment_type})\n"
+        f"Target: {target_company} ({target_country}, {target_sector})\n"
+        f"Buyer: {buyer_company} ({buyer_country}, {buyer_sector})\n"
+        "Dispatching 6 research agents in parallel: @country-agent @sector-agent @company-agent "
+        "@buyer-country-agent @buyer-sector-agent @buyer-company-agent")
+
     # --- PHASE 1: 6 agents in parallel threads ---
     from agents.country_agent.agent import run_country_assessment
     from agents.sector_agent.agent import run_sector_assessment
@@ -133,11 +198,13 @@ def run_assessment_sync(
         (run_buyer_company_assessment, (assessment_id, buyer_company, buyer_country),             "buyer-company-agent", 6, f"Buyer Company: {buyer_company}"),
     ]
 
+    import time as _time
     with ThreadPoolExecutor(max_workers=6) as pool:
-        futures = {
-            pool.submit(_run_phase1_agent, fn, args, name, idx, title, assessment_id): name
-            for fn, args, name, idx, title in phase1_work
-        }
+        futures = {}
+        for i, (fn, args, name, idx, title) in enumerate(phase1_work):
+            futures[pool.submit(_run_phase1_agent, fn, args, name, idx, title, assessment_id)] = name
+            if i < len(phase1_work) - 1:
+                _time.sleep(0.5)  # stagger submissions to avoid Featherless rate limits
         for future in as_completed(futures, timeout=PHASE1_TIMEOUT_SECONDS):
             agent_name, result = future.result()
             if not isinstance(result, Exception):
@@ -147,13 +214,19 @@ def run_assessment_sync(
                 }
                 _write_manifest(manifest_path, manifest)
 
+    _post_to_band(room_id, "coordinator", "PHASE_2_START", "Phase 1 complete. Running cross-workstream risk synthesis (@risk-agent)...")
+
     # --- PHASE 2: Risk agent ---
     manifest = _get_manifest(assessment_id)
     manifest["phase"] = "PHASE_2"
     _write_manifest(manifest_path, manifest)
 
-    from agents.risk_agent.agent import run_risk_assessment
-    risk_result = asyncio.run(run_risk_assessment(assessment_id, target_company, buyer_company))
+    from agents.risk_agent.agent import run_risk_assessment_sync
+    try:
+        risk_result = run_risk_assessment_sync(assessment_id, target_company, buyer_company)
+    except Exception as e:
+        risk_result = _make_partial_risk(assessment_id, target_company, buyer_company, str(e))
+
     save_agent_output(
         assessment_id=assessment_id,
         agent_name="risk-agent",
@@ -168,11 +241,18 @@ def run_assessment_sync(
     manifest["completed_agents"]["risk-agent"] = {"completed_at": datetime.utcnow().isoformat() + "Z"}
     _write_manifest(manifest_path, manifest)
 
+    _post_to_band(room_id, "risk-agent", "COMPLETE",
+        f"Risk rating: {risk_result['structured']['overall_risk_rating']} — running deal rationale (@deal-rationale-agent)...")
+
     # --- PHASE 3: Deal rationale agent ---
-    from agents.deal_rationale_agent.agent import run_deal_rationale
-    deal_result = asyncio.run(run_deal_rationale(
-        assessment_id, target_company, buyer_company, target_sector, target_country
-    ))
+    from agents.deal_rationale_agent.agent import run_deal_rationale_sync
+    try:
+        deal_result = run_deal_rationale_sync(
+            assessment_id, target_company, buyer_company, target_sector, target_country
+        )
+    except Exception as e:
+        deal_result = _make_partial_deal(assessment_id, target_company, buyer_company, str(e))
+
     save_agent_output(
         assessment_id=assessment_id,
         agent_name="deal-rationale-agent",
@@ -191,12 +271,22 @@ def run_assessment_sync(
     if risk_result["structured"].get("human_review_required") or deal_result["structured"].get("human_review_required"):
         overall_status = "NEEDS_HUMAN_REVIEW"
 
+    deal_structured = deal_result["structured"]
     manifest["phase"] = "COMPLETE"
     manifest["overall_status"] = overall_status
     manifest["completed_at"] = datetime.utcnow().isoformat() + "Z"
     manifest["decision"] = deal_result["decision"]
+    manifest["strategic_fit_score"] = deal_structured.get("strategic_fit_score")
+    manifest["implied_valuation_range_usd_m"] = deal_structured.get("implied_valuation_range_usd_m", {})
+    manifest["ev_ebitda_comparable_range"] = deal_structured.get("ev_ebitda_comparable_range", {})
+    manifest["overall_risk_rating"] = risk_result["structured"].get("overall_risk_rating")
     manifest["completed_agents"]["deal-rationale-agent"] = {"completed_at": datetime.utcnow().isoformat() + "Z"}
     _write_manifest(manifest_path, manifest)
+
+    _post_to_band(room_id, "coordinator", "COMPLETE",
+        f"Assessment complete. Decision: **{deal_result['decision']}** | "
+        f"Strategic fit: {deal_result['structured'].get('strategic_fit_score', 'N/A')}/10 | "
+        f"Risk: {risk_result['structured']['overall_risk_rating']}")
 
     return manifest
 

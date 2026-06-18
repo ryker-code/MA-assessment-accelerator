@@ -28,13 +28,14 @@ OUTPUT_DIR = Path(os.environ.get("OUTPUT_DIR", "output"))
 
 
 def _run_assessment_bg(assessment_id: str, target_company: str, buyer_company: str, assessment_type: str):
+    import os
     from agents.coordinator.agent import run_assessment_sync
     run_assessment_sync(
         assessment_id=assessment_id,
         target_company=target_company,
         buyer_company=buyer_company,
         assessment_type=assessment_type,
-        room_id="",
+        room_id=os.environ.get("BAND_ROOM_ID", ""),
     )
 
 

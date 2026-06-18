@@ -187,6 +187,11 @@ async def handle_message(message: dict):
     )
 
 
+def run_risk_assessment_sync(assessment_id: str, target_company: str, buyer_company: str) -> dict:
+    """Synchronous wrapper — safe to call from a non-async thread."""
+    return asyncio.run(run_risk_assessment(assessment_id, target_company, buyer_company))
+
+
 if __name__ == "__main__":
     try:
         from band import Band

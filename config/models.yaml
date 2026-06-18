@@ -45,11 +45,12 @@ agents:
     use_cache: true
 
   buyer_company_agent:
-    provider: featherless
-    model: Qwen/Qwen3-14B
+    provider: google_gemini
+    model: gemma-4-31b-it
     temperature: 0.2
     max_tokens: 4096
     use_cache: true
+    # switched from featherless/Qwen3-14B — 429 concurrency limit when 5 agents hit Featherless in parallel
 
   risk_agent:
     provider: google_gemini

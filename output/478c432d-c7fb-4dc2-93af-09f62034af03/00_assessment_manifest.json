@@ -1,0 +1,54 @@
+{
+  "assessment_id": "478c432d-c7fb-4dc2-93af-09f62034af03",
+  "buyer_company": "Gamestop",
+  "target_company": "ebay",
+  "assessment_type": "LEVEL_1",
+  "started_at": "2026-06-18T09:32:41.960561Z",
+  "phase": "COMPLETE",
+  "completed_agents": {
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-18T09:33:55.069794Z"
+    },
+    "buyer-country-agent": {
+      "completed_at": "2026-06-18T09:34:02.595953Z"
+    },
+    "company-agent": {
+      "completed_at": "2026-06-18T09:34:16.887696Z"
+    },
+    "buyer-company-agent": {
+      "completed_at": "2026-06-18T09:34:32.976540Z"
+    },
+    "sector-agent": {
+      "completed_at": "2026-06-18T09:34:36.063490Z"
+    },
+    "country-agent": {
+      "completed_at": "2026-06-18T09:34:59.333620Z"
+    },
+    "risk-agent": {
+      "completed_at": "2026-06-18T09:36:07.939924Z"
+    },
+    "deal-rationale-agent": {
+      "completed_at": "2026-06-18T09:37:30.392093Z"
+    }
+  },
+  "overall_status": "NEEDS_HUMAN_REVIEW",
+  "target_country": "USA",
+  "target_sector": "E-commerce",
+  "buyer_country": "USA",
+  "buyer_sector": "Retail",
+  "room_id": "9628f35b-a019-4c76-a37e-999e145c9b39",
+  "band_room_url": "https://app.band.ai/chat/9628f35b-a019-4c76-a37e-999e145c9b39",
+  "completed_at": "2026-06-18T09:37:30.392075Z",
+  "decision": "NO_GO",
+  "strategic_fit_score": 8.0,
+  "implied_valuation_range_usd_m": {
+    "low": 36800.0,
+    "high": 55200.0
+  },
+  "ev_ebitda_comparable_range": {
+    "low": 8.0,
+    "high": 12.0,
+    "median": 10.0
+  },
+  "overall_risk_rating": "RED"
+}

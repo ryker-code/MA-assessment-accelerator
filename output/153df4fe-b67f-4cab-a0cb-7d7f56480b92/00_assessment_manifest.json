@@ -1,0 +1,51 @@
+{
+  "assessment_id": "153df4fe-b67f-4cab-a0cb-7d7f56480b92",
+  "buyer_company": "STC",
+  "target_company": "Telenor Pakistan",
+  "assessment_type": "LEVEL_2",
+  "started_at": "2026-06-18T08:43:12.732659Z",
+  "phase": "COMPLETE",
+  "completed_agents": {
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-18T08:44:25.374763Z"
+    },
+    "country-agent": {
+      "completed_at": "2026-06-18T08:45:10.382333Z"
+    },
+    "company-agent": {
+      "completed_at": "2026-06-18T08:45:11.249639Z"
+    },
+    "buyer-country-agent": {
+      "completed_at": "2026-06-18T08:45:38.600660Z"
+    },
+    "buyer-company-agent": {
+      "completed_at": "2026-06-18T08:46:12.809293Z"
+    },
+    "risk-agent": {
+      "completed_at": "2026-06-18T08:47:24.781077Z"
+    },
+    "deal-rationale-agent": {
+      "completed_at": "2026-06-18T08:48:38.617048Z"
+    }
+  },
+  "overall_status": "NEEDS_HUMAN_REVIEW",
+  "target_country": "Pakistan",
+  "target_sector": "Telecommunications",
+  "buyer_country": "Saudi Arabia",
+  "buyer_sector": "Telecommunications",
+  "room_id": "ec8e04e8-3fbf-4d91-9d26-d4fa35f981ca",
+  "band_room_url": "https://app.band.ai/chat/ec8e04e8-3fbf-4d91-9d26-d4fa35f981ca",
+  "completed_at": "2026-06-18T08:48:38.617031Z",
+  "decision": "NO_GO",
+  "strategic_fit_score": 8.0,
+  "implied_valuation_range_usd_m": {
+    "low": 1050.0,
+    "high": 1650.0
+  },
+  "ev_ebitda_comparable_range": {
+    "low": 3.5,
+    "high": 5.5,
+    "median": 4.5
+  },
+  "overall_risk_rating": "RED"
+}

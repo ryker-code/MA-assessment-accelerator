@@ -19,24 +19,41 @@ def _format_markdown(data: SectorAssessment) -> str:
         f"## {data.sector} Sector — {data.country}\n",
         f"**Status:** {data.status} | **Confidence:** {data.confidence_score:.0%}\n",
         f"### Market Overview",
-        f"- **Market Size:** USD {data.market_size_usd_bn:.1f}bn",
+        f"- **Market Size (Latest):** USD {data.market_size_usd_bn:.1f}bn",
         f"- **Growth Rate:** {data.market_growth_rate_pct:.1f}% p.a.",
         f"- **Major Players:** {data.num_major_players}",
         f"- **Top 3:** {', '.join(data.top_3_players)}",
-        f"\n### Risk Profile",
+    ]
+    if data.market_size_5yr:
+        lines.append(f"\n#### Market Size History (5-Year, USD bn)")
+        for m in data.market_size_5yr:
+            lines.append(f"- {m.year}: {m.value:.1f}")
+    if data.top_players_market_share:
+        lines.append(f"\n#### Market Share (%)")
+        for player, share in data.top_players_market_share.items():
+            lines.append(f"- {player}: {share}")
+
+    lines += [f"\n### Risk Assessment",
         f"- **Regulatory Risk:** {data.regulatory_risk}",
         f"- **Technology Disruption Risk:** {data.technology_disruption_risk}",
-        f"\n### Key Regulations",
     ]
+    for flag in data.risk_flags:
+        lines.append(f"- {flag}")
+
+    lines.append(f"\n### Key Regulations")
     for reg in data.key_regulations:
         lines.append(f"- {reg}")
+
     lines.append(f"\n### Sector KPIs")
     for k, v in data.sector_specific_kpis.items():
         lines.append(f"- **{k}:** {v}")
-    lines.append(f"\n### Risk Flags")
-    for flag in data.risk_flags:
-        lines.append(f"- {flag}")
+
     lines += [f"\n### Narrative Summary", data.narrative_summary]
+
+    lines.append(f"\n### Data Sources")
+    for src in data.data_sources:
+        lines.append(f"- {src}")
+
     return "\n".join(lines)
 
 
@@ -80,6 +97,8 @@ async def run_sector_assessment(assessment_id: str, company: str, sector: str, c
         f'  "sector": "{sector}",\n'
         f'  "country": "{country}",\n'
         '  "market_size_usd_bn": 5.0,\n'
+        '  "market_size_5yr": [{"year": 2020, "value": 3.5, "unit": "USD bn"}, {"year": 2021, "value": 3.9, "unit": "USD bn"}, {"year": 2022, "value": 4.2, "unit": "USD bn"}, {"year": 2023, "value": 4.6, "unit": "USD bn"}, {"year": 2024, "value": 5.0, "unit": "USD bn"}],\n'
+        '  "top_players_market_share": {"Player A": 25.0, "Player B": 20.0, "Player C": 15.0, "Others": 40.0},\n'
         '  "market_growth_rate_pct": 4.5,\n'
         '  "num_major_players": 5,\n'
         '  "top_3_players": ["Player A", "Player B", "Player C"],\n'
@@ -92,6 +111,8 @@ async def run_sector_assessment(assessment_id: str, company: str, sector: str, c
         "}\n\n"
         "Rules: regulatory_risk and technology_disruption_risk must be HIGH, MEDIUM, or LOW. "
         "status must be COMPLETE, PARTIAL, or NEEDS_HUMAN_REVIEW. "
+        "market_size_5yr: 5 years of market size data in USD bn. "
+        "top_players_market_share: dict of {player_name: market_share_pct} including 'Others'. "
         "Return ONLY the JSON object, no other text."
     )
 

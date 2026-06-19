@@ -18,18 +18,32 @@ def _format_markdown(data: CountryAssessment) -> str:
     lines = [
         f"## {data.country} — Country Assessment\n",
         f"**Status:** {data.status} | **Confidence:** {data.confidence_score:.0%}\n",
-        f"### Macroeconomic Indicators",
-        f"- **GDP (Nominal):** USD {data.gdp_nominal_usd_bn:.1f}bn",
-        f"- **Inflation Rate:** {data.inflation_rate_latest:.1f}%",
-        f"- **Currency:** {data.currency_code} ({data.currency_trend})",
-        f"- **Corporate Tax Rate:** {data.corporate_tax_rate_pct:.1f}%",
-        f"- **Political Stability Score:** {data.political_stability_score:.1f}/100",
-        f"- **Ease of Doing Business Rank:** #{data.ease_of_doing_business_rank}",
-        f"\n### GDP Growth (5-Year)",
+        f"### GDP Growth (5-Year)",
     ]
     for m in data.gdp_growth_5yr:
         lines.append(f"- {m.year}: {m.value:.1f}{m.unit}")
+
+    lines.append(f"\n### Inflation Rate (5-Year)")
+    if data.inflation_5yr:
+        for m in data.inflation_5yr:
+            lines.append(f"- {m.year}: {m.value:.1f}{m.unit}")
+    else:
+        lines.append(f"- Latest: {data.inflation_rate_latest:.1f}%")
+
+    lines.append(f"\n### Currency Exchange Rate (5-Year: USD to {data.currency_code})")
+    if data.currency_exchange_5yr:
+        for m in data.currency_exchange_5yr:
+            lines.append(f"- {m.year}: {m.value:.2f}")
+    else:
+        lines.append(f"- Trend: {data.currency_trend}")
+
     lines += [
+        f"\n### Corporate Tax Rate",
+        f"{data.corporate_tax_rate_pct:.1f}%",
+        f"\n### Political Stability Score",
+        f"{data.political_stability_score:.1f}/100",
+        f"\n### Ease of Doing Business Rank",
+        f"#{data.ease_of_doing_business_rank}",
         f"\n### Currency & Capital",
         f"{data.currency_repatriation_laws}",
         f"\n### Risk Flags",
@@ -86,6 +100,8 @@ async def run_country_assessment(assessment_id: str, company: str, country: str)
         '  "data_sources": ["https://example.com"],\n'
         f'  "country": "{country}",\n'
         '  "gdp_growth_5yr": [{"year": 2020, "value": -0.5, "unit": "%"}, {"year": 2021, "value": 3.9, "unit": "%"}, {"year": 2022, "value": 6.1, "unit": "%"}, {"year": 2023, "value": 2.1, "unit": "%"}, {"year": 2024, "value": 2.5, "unit": "%"}],\n'
+        '  "inflation_5yr": [{"year": 2020, "value": 2.1, "unit": "%"}, {"year": 2021, "value": 3.4, "unit": "%"}, {"year": 2022, "value": 7.0, "unit": "%"}, {"year": 2023, "value": 4.5, "unit": "%"}, {"year": 2024, "value": 3.2, "unit": "%"}],\n'
+        '  "currency_exchange_5yr": [{"year": 2020, "value": 160.0, "unit": ""}, {"year": 2021, "value": 175.0, "unit": ""}, {"year": 2022, "value": 200.0, "unit": ""}, {"year": 2023, "value": 280.0, "unit": ""}, {"year": 2024, "value": 278.0, "unit": ""}],\n'
         '  "gdp_nominal_usd_bn": 338.0,\n'
         '  "inflation_rate_latest": 4.5,\n'
         '  "currency_code": "PKR",\n'
@@ -99,6 +115,9 @@ async def run_country_assessment(assessment_id: str, company: str, country: str)
         "}\n\n"
         "Rules: currency_trend must be one of APPRECIATING, STABLE, DEPRECIATING, VOLATILE. "
         "status must be COMPLETE, PARTIAL, or NEEDS_HUMAN_REVIEW. "
+        "inflation_5yr: 5 years of annual inflation data. "
+        "currency_exchange_5yr: 5 years of USD to local currency exchange rates (how many local units per 1 USD). "
+        "If the country IS the USA, set currency_exchange_5yr values to 1.0 each year. "
         "Return ONLY the JSON object, no other text."
     )
 

@@ -1,0 +1,51 @@
+{
+  "assessment_id": "c0618e26-ff8f-46c7-8fc6-5249018c22c1",
+  "buyer_company": "T Mobile",
+  "target_company": "American Tower Corporation",
+  "assessment_type": "LEVEL_2",
+  "started_at": "2026-06-19T13:17:55.002671Z",
+  "phase": "COMPLETE",
+  "completed_agents": {
+    "buyer-country-agent": {
+      "completed_at": "2026-06-19T13:19:02.882628Z"
+    },
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-19T13:19:06.830367Z"
+    },
+    "buyer-company-agent": {
+      "completed_at": "2026-06-19T13:19:43.870303Z"
+    },
+    "sector-agent": {
+      "completed_at": "2026-06-19T13:19:59.253237Z"
+    },
+    "country-agent": {
+      "completed_at": "2026-06-19T13:20:58.050962Z"
+    },
+    "risk-agent": {
+      "completed_at": "2026-06-19T13:21:58.867234Z"
+    },
+    "deal-rationale-agent": {
+      "completed_at": "2026-06-19T13:23:09.194850Z"
+    }
+  },
+  "overall_status": "NEEDS_HUMAN_REVIEW",
+  "target_country": "USA",
+  "target_sector": "Telecommunications",
+  "buyer_country": "USA",
+  "buyer_sector": "Telecommunications",
+  "room_id": "5012b2bc-a753-445f-9592-b6757f6a6ca2",
+  "band_room_url": "https://app.band.ai/chat/5012b2bc-a753-445f-9592-b6757f6a6ca2",
+  "completed_at": "2026-06-19T13:23:09.194833Z",
+  "decision": "NO_GO",
+  "strategic_fit_score": 7.5,
+  "implied_valuation_range_usd_m": {
+    "low": 76000.0,
+    "high": 114000.0
+  },
+  "ev_ebitda_comparable_range": {
+    "low": 7.6,
+    "high": 11.4,
+    "median": 9.5
+  },
+  "overall_risk_rating": "RED"
+}

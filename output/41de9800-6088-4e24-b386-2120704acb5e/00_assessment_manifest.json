@@ -1,0 +1,16 @@
+{
+  "assessment_id": "41de9800-6088-4e24-b386-2120704acb5e",
+  "buyer_company": "palo alto networks",
+  "target_company": "cyberark",
+  "assessment_type": "LEVEL_1",
+  "started_at": "2026-06-18T16:43:55.550578Z",
+  "phase": "PHASE_2",
+  "completed_agents": {},
+  "overall_status": "IN_PROGRESS",
+  "target_country": "",
+  "target_sector": "",
+  "buyer_country": "",
+  "buyer_sector": "",
+  "room_id": "adb9c2f8-b837-4dcb-ac02-a5625908ff35",
+  "band_room_url": "https://app.band.ai/chat/adb9c2f8-b837-4dcb-ac02-a5625908ff35"
+}

@@ -1,0 +1,31 @@
+{
+  "assessment_id": "d7881e85-78a6-4d58-91da-1050eca04ae5",
+  "buyer_company": "spaceX",
+  "target_company": "cursor",
+  "assessment_type": "LEVEL_1",
+  "started_at": "2026-06-18T07:32:43.885209Z",
+  "phase": "PHASE_2",
+  "completed_agents": {
+    "company-agent": {
+      "completed_at": "2026-06-18T07:34:18.789559Z"
+    },
+    "country-agent": {
+      "completed_at": "2026-06-18T07:34:22.793316Z"
+    },
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-18T07:34:25.935082Z"
+    },
+    "sector-agent": {
+      "completed_at": "2026-06-18T07:34:38.486990Z"
+    },
+    "buyer-company-agent": {
+      "completed_at": "2026-06-18T07:34:56.230482Z"
+    }
+  },
+  "overall_status": "IN_PROGRESS",
+  "target_country": "USA",
+  "target_sector": "Software",
+  "buyer_country": "USA",
+  "buyer_sector": "Aerospace",
+  "room_id": ""
+}

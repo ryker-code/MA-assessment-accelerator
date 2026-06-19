@@ -1,0 +1,54 @@
+{
+  "assessment_id": "36b216a5-7418-461e-98cd-8c9cd0445076",
+  "buyer_company": "TestCo",
+  "target_company": "TargetCo",
+  "assessment_type": "LEVEL_2",
+  "started_at": "2026-06-19T12:32:23.578919Z",
+  "phase": "COMPLETE",
+  "completed_agents": {
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-19T12:33:31.618555Z"
+    },
+    "buyer-country-agent": {
+      "completed_at": "2026-06-19T12:33:35.130219Z"
+    },
+    "country-agent": {
+      "completed_at": "2026-06-19T12:33:55.731824Z"
+    },
+    "sector-agent": {
+      "completed_at": "2026-06-19T12:34:04.607116Z"
+    },
+    "company-agent": {
+      "completed_at": "2026-06-19T12:34:22.915053Z"
+    },
+    "buyer-company-agent": {
+      "completed_at": "2026-06-19T12:34:28.816967Z"
+    },
+    "risk-agent": {
+      "completed_at": "2026-06-19T12:35:36.571675Z"
+    },
+    "deal-rationale-agent": {
+      "completed_at": "2026-06-19T12:37:00.798895Z"
+    }
+  },
+  "overall_status": "NEEDS_HUMAN_REVIEW",
+  "target_country": "Unknown",
+  "target_sector": "Unknown",
+  "buyer_country": "Unknown",
+  "buyer_sector": "Unknown",
+  "room_id": "70bc2b78-c8ad-4939-91e8-7e8585c2e1fa",
+  "band_room_url": "https://app.band.ai/chat/70bc2b78-c8ad-4939-91e8-7e8585c2e1fa",
+  "completed_at": "2026-06-19T12:37:00.798876Z",
+  "decision": "NO_GO",
+  "strategic_fit_score": 7.0,
+  "implied_valuation_range_usd_m": {
+    "low": 0.0,
+    "high": 0.0
+  },
+  "ev_ebitda_comparable_range": {
+    "low": 6.0,
+    "high": 9.5,
+    "median": 7.8
+  },
+  "overall_risk_rating": "RED"
+}

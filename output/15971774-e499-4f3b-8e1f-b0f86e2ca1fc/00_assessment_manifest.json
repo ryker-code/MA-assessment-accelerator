@@ -1,0 +1,54 @@
+{
+  "assessment_id": "15971774-e499-4f3b-8e1f-b0f86e2ca1fc",
+  "buyer_company": "SpaceX",
+  "target_company": "Telesat",
+  "assessment_type": "LEVEL_2",
+  "started_at": "2026-06-19T12:18:52.534931Z",
+  "phase": "COMPLETE",
+  "completed_agents": {
+    "buyer-country-agent": {
+      "completed_at": "2026-06-19T12:20:02.957180Z"
+    },
+    "sector-agent": {
+      "completed_at": "2026-06-19T12:20:10.389708Z"
+    },
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-19T12:20:29.167628Z"
+    },
+    "country-agent": {
+      "completed_at": "2026-06-19T12:20:33.599248Z"
+    },
+    "buyer-company-agent": {
+      "completed_at": "2026-06-19T12:20:39.557102Z"
+    },
+    "company-agent": {
+      "completed_at": "2026-06-19T12:21:06.624878Z"
+    },
+    "risk-agent": {
+      "completed_at": "2026-06-19T12:22:17.418219Z"
+    },
+    "deal-rationale-agent": {
+      "completed_at": "2026-06-19T12:23:35.611842Z"
+    }
+  },
+  "overall_status": "NEEDS_HUMAN_REVIEW",
+  "target_country": "Canada",
+  "target_sector": "Telecommunications",
+  "buyer_country": "USA",
+  "buyer_sector": "Aerospace",
+  "room_id": "3f4659a6-1468-4332-99ba-d0c886c72dc1",
+  "band_room_url": "https://app.band.ai/chat/3f4659a6-1468-4332-99ba-d0c886c72dc1",
+  "completed_at": "2026-06-19T12:23:35.611818Z",
+  "decision": "NO_GO",
+  "strategic_fit_score": 8.5,
+  "implied_valuation_range_usd_m": {
+    "low": 900.0,
+    "high": 1425.0
+  },
+  "ev_ebitda_comparable_range": {
+    "low": 6.0,
+    "high": 9.5,
+    "median": 7.8
+  },
+  "overall_risk_rating": "RED"
+}

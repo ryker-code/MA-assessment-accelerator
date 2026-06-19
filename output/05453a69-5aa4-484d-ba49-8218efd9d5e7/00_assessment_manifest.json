@@ -1,0 +1,54 @@
+{
+  "assessment_id": "05453a69-5aa4-484d-ba49-8218efd9d5e7",
+  "buyer_company": "palo alto networks",
+  "target_company": "cyberark",
+  "assessment_type": "LEVEL_1",
+  "started_at": "2026-06-18T16:56:15.712594Z",
+  "phase": "COMPLETE",
+  "completed_agents": {
+    "sector-agent": {
+      "completed_at": "2026-06-18T16:57:24.916396Z"
+    },
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-18T16:57:28.287809Z"
+    },
+    "buyer-company-agent": {
+      "completed_at": "2026-06-18T16:57:31.877557Z"
+    },
+    "country-agent": {
+      "completed_at": "2026-06-18T16:57:31.839414Z"
+    },
+    "company-agent": {
+      "completed_at": "2026-06-18T16:57:35.945259Z"
+    },
+    "buyer-country-agent": {
+      "completed_at": "2026-06-18T16:57:57.886631Z"
+    },
+    "risk-agent": {
+      "completed_at": "2026-06-18T16:59:03.049371Z"
+    },
+    "deal-rationale-agent": {
+      "completed_at": "2026-06-18T17:00:18.766051Z"
+    }
+  },
+  "overall_status": "NEEDS_HUMAN_REVIEW",
+  "target_country": "Israel",
+  "target_sector": "Cybersecurity",
+  "buyer_country": "USA",
+  "buyer_sector": "Cybersecurity",
+  "room_id": "42c5459f-b952-4775-941a-08d7040eeea5",
+  "band_room_url": "https://app.band.ai/chat/42c5459f-b952-4775-941a-08d7040eeea5",
+  "completed_at": "2026-06-18T17:00:18.766033Z",
+  "decision": "NO_GO",
+  "strategic_fit_score": 9.0,
+  "implied_valuation_range_usd_m": {
+    "low": 10000.0,
+    "high": 15000.0
+  },
+  "ev_ebitda_comparable_range": {
+    "low": 22.0,
+    "high": 30.0,
+    "median": 26.0
+  },
+  "overall_risk_rating": "RED"
+}

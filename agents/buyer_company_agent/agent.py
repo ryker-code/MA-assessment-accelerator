@@ -18,11 +18,34 @@ def _format_markdown(data: CompanyAssessment) -> str:
     lines = [
         f"## {data.company_name} — Buyer Company Assessment (Buy-Side)\n",
         f"**Status:** {data.status} | **Confidence:** {data.confidence_score:.0%}\n",
-        f"### Financial Snapshot",
-        f"- **Revenue:** USD {data.revenue_latest_usd_m:.1f}m",
-        f"- **EBITDA:** USD {data.ebitda_latest_usd_m:.1f}m ({data.ebitda_margin_pct:.1f}% margin)",
-        f"- **Net Debt:** USD {data.net_debt_usd_m:.1f}m ({data.net_debt_to_ebitda:.1f}x EBITDA)",
-        f"- **Revenue Growth:** {data.revenue_growth_rate_pct:.1f}% p.a.",
+    ]
+    if data.financials_5yr:
+        lines.append("### Financials (5-Year)")
+        lines.append("| Year | Revenue (USDm) | Rev Growth % | EBITDA (USDm) | EBITDA % | Net Profit (USDm) | NP % | EPS (USD) | CapEx (USDm) | Net Debt (USDm) |")
+        lines.append("|------|----------------|--------------|---------------|----------|-------------------|------|-----------|--------------|-----------------|")
+        for yr in data.financials_5yr:
+            lines.append(
+                f"| {yr.get('year','')} "
+                f"| {yr.get('revenue','—')} "
+                f"| {yr.get('revenue_growth_pct','—')} "
+                f"| {yr.get('ebitda','—')} "
+                f"| {yr.get('ebitda_margin_pct','—')} "
+                f"| {yr.get('net_profit','—')} "
+                f"| {yr.get('net_profit_margin_pct','—')} "
+                f"| {yr.get('eps','—')} "
+                f"| {yr.get('capex','—')} "
+                f"| {yr.get('net_debt','—')} |"
+            )
+    else:
+        lines += [
+            "### Financial Snapshot",
+            f"- **Revenue:** USD {data.revenue_latest_usd_m:.1f}m",
+            f"- **EBITDA:** USD {data.ebitda_latest_usd_m:.1f}m ({data.ebitda_margin_pct:.1f}% margin)",
+            f"- **Net Debt:** USD {data.net_debt_usd_m:.1f}m ({data.net_debt_to_ebitda:.1f}x EBITDA)",
+            f"- **Revenue Growth:** {data.revenue_growth_rate_pct:.1f}% p.a.",
+        ]
+
+    lines += [
         f"\n### Acquisition Capacity",
         f"- **Cash Position:** USD {data.cash_position_usd_m or 0:.1f}m",
         f"- **Estimated Acquisition Capacity:** USD {data.acquisition_capacity_usd_m or 0:.1f}m",
@@ -35,13 +58,22 @@ def _format_markdown(data: CompanyAssessment) -> str:
         lines.append(f"- {acq}")
     lines.append(f"\n### Management Quality")
     lines.append(f"Score: {data.management_quality_score:.1f}/10")
+    lines.append(f"\n### Key Shareholders")
+    for sh in data.key_shareholders:
+        lines.append(f"- {sh.get('name', 'N/A')}: {sh.get('stake_pct', 'N/A')}% ({sh.get('type', '')})")
     lines.append(f"\n### Recent Strategic Moves")
     for move in data.recent_strategic_moves:
         lines.append(f"- {move}")
-    lines.append(f"\n### Risk Flags")
+    lines.append(f"\n### Operational KPIs")
+    for k, v in data.sector_kpis.items():
+        lines.append(f"- **{k}:** {v}")
+    lines.append(f"\n### Risks")
     for flag in data.risk_flags:
         lines.append(f"- {flag}")
     lines += [f"\n### Narrative Summary", data.narrative_summary]
+    lines.append(f"\n### Data Sources")
+    for src in data.data_sources:
+        lines.append(f"- {src}")
     return "\n".join(lines)
 
 
@@ -99,6 +131,13 @@ async def run_buyer_company_assessment(
         '  "sector_kpis": {"subscribers_m": 35.0, "ARPU_USD": 25.0},\n'
         '  "risk_flags": ["Integration risk from prior acquisitions"],\n'
         '  "narrative_summary": "Comprehensive buyer profile narrative here.",\n'
+        '  "financials_5yr": [\n'
+        '    {"year": 2020, "revenue": 13000.0, "revenue_growth_pct": -3.0, "ebitda": 5000.0, "ebitda_margin_pct": 38.5, "net_profit": 2000.0, "net_profit_margin_pct": 15.4, "eps": 2.00, "capex": 1800.0, "net_debt": 6000.0},\n'
+        '    {"year": 2021, "revenue": 13500.0, "revenue_growth_pct": 3.8, "ebitda": 5200.0, "ebitda_margin_pct": 38.5, "net_profit": 2100.0, "net_profit_margin_pct": 15.6, "eps": 2.10, "capex": 1900.0, "net_debt": 5800.0},\n'
+        '    {"year": 2022, "revenue": 14000.0, "revenue_growth_pct": 3.7, "ebitda": 5500.0, "ebitda_margin_pct": 39.3, "net_profit": 2200.0, "net_profit_margin_pct": 15.7, "eps": 2.20, "capex": 1950.0, "net_debt": 5500.0},\n'
+        '    {"year": 2023, "revenue": 14500.0, "revenue_growth_pct": 3.6, "ebitda": 5700.0, "ebitda_margin_pct": 39.3, "net_profit": 2300.0, "net_profit_margin_pct": 15.9, "eps": 2.30, "capex": 2000.0, "net_debt": 5200.0},\n'
+        '    {"year": 2024, "revenue": 15000.0, "revenue_growth_pct": 3.4, "ebitda": 6000.0, "ebitda_margin_pct": 40.0, "net_profit": 2400.0, "net_profit_margin_pct": 16.0, "eps": 2.40, "capex": 2000.0, "net_debt": 5000.0}\n'
+        '  ],\n'
         '  "cash_position_usd_m": 8000.0,\n'
         '  "acquisition_capacity_usd_m": 12000.0,\n'
         '  "stated_strategic_priorities": ["Expand into emerging markets", "Digital transformation"],\n'
@@ -106,6 +145,7 @@ async def run_buyer_company_assessment(
         "}\n\n"
         "Rules: is_buy_side must be true. Populate ALL buy-side specific fields. "
         "acquisition_capacity = cash + conservative debt headroom (e.g. 1-2x current EBITDA). "
+        "financials_5yr: provide actual 5-year financial history. All monetary values in USD millions. "
         "Return ONLY JSON."
     )
 

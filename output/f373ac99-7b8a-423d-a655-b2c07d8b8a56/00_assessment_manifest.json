@@ -1,0 +1,23 @@
+{
+  "assessment_id": "f373ac99-7b8a-423d-a655-b2c07d8b8a56",
+  "buyer_company": "palo alto networks",
+  "target_company": "ZScaler",
+  "assessment_type": "LEVEL_2",
+  "started_at": "2026-06-19T14:00:08.023577Z",
+  "phase": "PHASE_1",
+  "completed_agents": {
+    "sector-agent": {
+      "completed_at": "2026-06-19T14:01:36.034975Z"
+    },
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-19T14:01:39.527146Z"
+    }
+  },
+  "overall_status": "IN_PROGRESS",
+  "target_country": "USA",
+  "target_sector": "Cybersecurity",
+  "buyer_country": "USA",
+  "buyer_sector": "Cybersecurity",
+  "room_id": "3e283b01-2496-498f-8a19-400b7058feb7",
+  "band_room_url": "https://app.band.ai/chat/3e283b01-2496-498f-8a19-400b7058feb7"
+}

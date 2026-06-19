@@ -1,0 +1,32 @@
+{
+  "assessment_id": "a9a2d12b-165a-4dc7-86e6-5ed528155b86",
+  "buyer_company": "Bharti Airtel India",
+  "target_company": "British Telecom",
+  "assessment_type": "LEVEL_2",
+  "started_at": "2026-06-19T13:27:08.214794Z",
+  "phase": "PHASE_2",
+  "completed_agents": {
+    "sector-agent": {
+      "completed_at": "2026-06-19T13:28:09.422896Z"
+    },
+    "buyer-country-agent": {
+      "completed_at": "2026-06-19T13:28:45.031323Z"
+    },
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-19T13:28:54.896403Z"
+    },
+    "buyer-company-agent": {
+      "completed_at": "2026-06-19T13:29:09.564454Z"
+    },
+    "country-agent": {
+      "completed_at": "2026-06-19T13:29:28.343810Z"
+    }
+  },
+  "overall_status": "IN_PROGRESS",
+  "target_country": "United Kingdom",
+  "target_sector": "Telecommunications",
+  "buyer_country": "India",
+  "buyer_sector": "Telecommunications",
+  "room_id": "17bdd05c-a476-40f0-8180-65553fbebdbf",
+  "band_room_url": "https://app.band.ai/chat/17bdd05c-a476-40f0-8180-65553fbebdbf"
+}

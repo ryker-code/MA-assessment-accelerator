@@ -88,7 +88,7 @@ class LLMRouter:
 
     def _call_google(self, model, messages, system_prompt, temperature, max_tokens) -> str:
         from google import genai
-        from google.genai.types import GenerateContentConfig
+        from google.genai.types import GenerateContentConfig, ThinkingConfig, ThinkingLevel, Tool, GoogleSearch
 
         client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
         last_user_message = next(
@@ -97,6 +97,8 @@ class LLMRouter:
         config_kwargs = {
             "temperature": temperature,
             "max_output_tokens": max_tokens,
+            "thinking_config": ThinkingConfig(thinking_level=ThinkingLevel.HIGH),
+            "tools": [Tool(google_search=GoogleSearch())],
         }
         if system_prompt:
             config_kwargs["system_instruction"] = system_prompt
@@ -109,18 +111,84 @@ class LLMRouter:
         return response.text
 
     def _call_openai_compat(self, model, messages, system_prompt, temperature, max_tokens, base_url, api_key) -> str:
+        import json as _json
+        import re
         from openai import OpenAI
 
-        client = OpenAI(api_key=api_key, base_url=base_url, timeout=120.0)
+        client = OpenAI(api_key=api_key, base_url=base_url, timeout=180.0)
         full_messages = []
         if system_prompt:
             full_messages.append({"role": "system", "content": system_prompt})
         full_messages.extend(messages)
 
-        response = client.chat.completions.create(
-            model=model,
-            messages=full_messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        return response.choices[0].message.content
+        web_search_tool = {
+            "type": "function",
+            "function": {
+                "name": "web_search",
+                "description": "Search the web for current data, financial reports, market statistics, and news.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string", "description": "The search query"}
+                    },
+                    "required": ["query"],
+                },
+            },
+        }
+
+        # enable_thinking only works on Qwen3/DeepSeek models, not Gemini
+        supports_thinking = not model.startswith("google/")
+        extra = {"enable_thinking": True} if supports_thinking else {}
+
+        for _ in range(4):
+            try:
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=full_messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    tools=[web_search_tool],
+                    **({"extra_body": extra} if extra else {}),
+                )
+            except Exception:
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=full_messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+
+            choice = response.choices[0]
+            if choice.finish_reason == "tool_calls" and getattr(choice.message, "tool_calls", None):
+                tool_msg = {"role": "assistant", "content": choice.message.content or "", "tool_calls": [
+                    {
+                        "id": tc.id,
+                        "type": "function",
+                        "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+                    }
+                    for tc in choice.message.tool_calls
+                ]}
+                full_messages.append(tool_msg)
+                for tc in choice.message.tool_calls:
+                    if tc.function.name == "web_search":
+                        try:
+                            args = _json.loads(tc.function.arguments)
+                            from agents.shared.search_tools import web_search as do_search
+                            results = do_search(args.get("query", ""))
+                            result_text = "\n".join(
+                                f"- {r.get('title','')}: {r.get('content','')[:300]}"
+                                for r in results[:5]
+                            )
+                        except Exception as e:
+                            result_text = f"Search unavailable: {e}"
+                        full_messages.append({
+                            "role": "tool",
+                            "tool_call_id": tc.id,
+                            "content": result_text,
+                        })
+            else:
+                content = choice.message.content or ""
+                content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
+                return content
+
+        return response.choices[0].message.content or ""

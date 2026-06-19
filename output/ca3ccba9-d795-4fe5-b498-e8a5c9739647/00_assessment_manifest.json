@@ -1,0 +1,54 @@
+{
+  "assessment_id": "ca3ccba9-d795-4fe5-b498-e8a5c9739647",
+  "buyer_company": "safeway",
+  "target_company": "whole foods",
+  "assessment_type": "LEVEL_1",
+  "started_at": "2026-06-18T21:47:53.228445Z",
+  "phase": "COMPLETE",
+  "completed_agents": {
+    "company-agent": {
+      "completed_at": "2026-06-18T21:49:02.885748Z"
+    },
+    "buyer-country-agent": {
+      "completed_at": "2026-06-18T21:49:07.924993Z"
+    },
+    "buyer-company-agent": {
+      "completed_at": "2026-06-18T21:49:26.696726Z"
+    },
+    "country-agent": {
+      "completed_at": "2026-06-18T21:49:27.622041Z"
+    },
+    "sector-agent": {
+      "completed_at": "2026-06-18T21:49:32.870797Z"
+    },
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-18T21:49:45.145076Z"
+    },
+    "risk-agent": {
+      "completed_at": "2026-06-18T21:50:55.746082Z"
+    },
+    "deal-rationale-agent": {
+      "completed_at": "2026-06-18T21:52:13.532067Z"
+    }
+  },
+  "overall_status": "NEEDS_HUMAN_REVIEW",
+  "target_country": "USA",
+  "target_sector": "Grocery Retail",
+  "buyer_country": "USA",
+  "buyer_sector": "Grocery Retail",
+  "room_id": "1ddfa068-1c94-4df8-b73c-b137a4a8fa5c",
+  "band_room_url": "https://app.band.ai/chat/1ddfa068-1c94-4df8-b73c-b137a4a8fa5c",
+  "completed_at": "2026-06-18T21:52:13.532049Z",
+  "decision": "NO_GO",
+  "strategic_fit_score": 8.5,
+  "implied_valuation_range_usd_m": {
+    "low": 12000.0,
+    "high": 19000.0
+  },
+  "ev_ebitda_comparable_range": {
+    "low": 6.0,
+    "high": 9.5,
+    "median": 7.8
+  },
+  "overall_risk_rating": "RED"
+}

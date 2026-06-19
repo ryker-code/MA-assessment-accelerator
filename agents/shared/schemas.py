@@ -24,6 +24,8 @@ class MacroIndicator(BaseModel):
 class CountryAssessment(AgentOutput):
     country: str
     gdp_growth_5yr: list[MacroIndicator]
+    inflation_5yr: list[MacroIndicator] = []
+    currency_exchange_5yr: list[MacroIndicator] = []
     gdp_nominal_usd_bn: float
     inflation_rate_latest: float
     currency_code: str
@@ -40,6 +42,8 @@ class SectorAssessment(AgentOutput):
     sector: str
     country: str
     market_size_usd_bn: float
+    market_size_5yr: list[MacroIndicator] = []
+    top_players_market_share: dict = {}
     market_growth_rate_pct: float
     num_major_players: int
     top_3_players: list[str]
@@ -67,6 +71,7 @@ class CompanyAssessment(AgentOutput):
     sector_kpis: dict
     risk_flags: list[str]
     narrative_summary: str
+    financials_5yr: list[dict] = []
     cash_position_usd_m: Optional[float] = None
     acquisition_capacity_usd_m: Optional[float] = None
     stated_strategic_priorities: Optional[list[str]] = None

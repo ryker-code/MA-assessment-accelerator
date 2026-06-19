@@ -1,0 +1,54 @@
+{
+  "assessment_id": "8b84aef3-8d6b-4b2c-a8cf-928c163232ef",
+  "buyer_company": "Booz Allen Hamilton",
+  "target_company": "IBM",
+  "assessment_type": "LEVEL_1",
+  "started_at": "2026-06-18T17:07:49.580870Z",
+  "phase": "COMPLETE",
+  "completed_agents": {
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-18T17:08:49.635444Z"
+    },
+    "buyer-country-agent": {
+      "completed_at": "2026-06-18T17:09:16.873381Z"
+    },
+    "buyer-company-agent": {
+      "completed_at": "2026-06-18T17:09:25.586577Z"
+    },
+    "country-agent": {
+      "completed_at": "2026-06-18T17:09:27.041521Z"
+    },
+    "company-agent": {
+      "completed_at": "2026-06-18T17:09:29.450265Z"
+    },
+    "sector-agent": {
+      "completed_at": "2026-06-18T17:10:00.632828Z"
+    },
+    "risk-agent": {
+      "completed_at": "2026-06-18T17:11:07.810836Z"
+    },
+    "deal-rationale-agent": {
+      "completed_at": "2026-06-18T17:12:23.958093Z"
+    }
+  },
+  "overall_status": "NEEDS_HUMAN_REVIEW",
+  "target_country": "USA",
+  "target_sector": "Technology",
+  "buyer_country": "USA",
+  "buyer_sector": "Management Consulting",
+  "room_id": "1701e80c-f7eb-4ec8-9466-bfb5f00a2e71",
+  "band_room_url": "https://app.band.ai/chat/1701e80c-f7eb-4ec8-9466-bfb5f00a2e71",
+  "completed_at": "2026-06-18T17:12:23.958075Z",
+  "decision": "NO_GO",
+  "strategic_fit_score": 8.0,
+  "implied_valuation_range_usd_m": {
+    "low": 89280.0,
+    "high": 141360.0
+  },
+  "ev_ebitda_comparable_range": {
+    "low": 6.0,
+    "high": 9.5,
+    "median": 7.8
+  },
+  "overall_risk_rating": "RED"
+}

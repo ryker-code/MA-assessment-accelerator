@@ -1,0 +1,54 @@
+{
+  "assessment_id": "0324ee04-ad7c-4005-90b9-b25302f5d4a7",
+  "buyer_company": "Bharti Airtel India",
+  "target_company": "Vodafone Idea",
+  "assessment_type": "LEVEL_1",
+  "started_at": "2026-06-18T09:16:26.040925Z",
+  "phase": "COMPLETE",
+  "completed_agents": {
+    "buyer-country-agent": {
+      "completed_at": "2026-06-18T09:17:37.575841Z"
+    },
+    "buyer-company-agent": {
+      "completed_at": "2026-06-18T09:17:38.660338Z"
+    },
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-18T09:17:48.393474Z"
+    },
+    "country-agent": {
+      "completed_at": "2026-06-18T09:17:50.584511Z"
+    },
+    "company-agent": {
+      "completed_at": "2026-06-18T09:17:58.498861Z"
+    },
+    "sector-agent": {
+      "completed_at": "2026-06-18T09:18:05.914310Z"
+    },
+    "risk-agent": {
+      "completed_at": "2026-06-18T09:19:09.227402Z"
+    },
+    "deal-rationale-agent": {
+      "completed_at": "2026-06-18T09:20:29.994859Z"
+    }
+  },
+  "overall_status": "NEEDS_HUMAN_REVIEW",
+  "target_country": "India",
+  "target_sector": "Telecommunications",
+  "buyer_country": "India",
+  "buyer_sector": "Telecommunications",
+  "room_id": "0f107b81-f45c-4bdb-8214-02dcf3658c69",
+  "band_room_url": "https://app.band.ai/chat/0f107b81-f45c-4bdb-8214-02dcf3658c69",
+  "completed_at": "2026-06-18T09:20:29.994840Z",
+  "decision": "NO_GO",
+  "strategic_fit_score": 9.0,
+  "implied_valuation_range_usd_m": {
+    "low": 2000.0,
+    "high": 5500.0
+  },
+  "ev_ebitda_comparable_range": {
+    "low": 4.0,
+    "high": 7.0,
+    "median": 5.5
+  },
+  "overall_risk_rating": "RED"
+}

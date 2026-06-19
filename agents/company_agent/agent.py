@@ -15,15 +15,39 @@ router = LLMRouter()
 
 
 def _format_markdown(data: CompanyAssessment) -> str:
+    side = "Sell-Side" if not data.is_buy_side else "Buy-Side"
     lines = [
-        f"## {data.company_name} — Company Assessment (Sell-Side)\n",
+        f"## {data.company_name} — Company Assessment ({side})\n",
         f"**Status:** {data.status} | **Confidence:** {data.confidence_score:.0%}\n",
-        f"### Financial Snapshot",
-        f"- **Revenue:** USD {data.revenue_latest_usd_m:.1f}m",
-        f"- **EBITDA:** USD {data.ebitda_latest_usd_m:.1f}m ({data.ebitda_margin_pct:.1f}% margin)",
-        f"- **Net Debt:** USD {data.net_debt_usd_m:.1f}m ({data.net_debt_to_ebitda:.1f}x EBITDA)",
-        f"- **CapEx:** USD {data.capex_usd_m:.1f}m",
-        f"- **Revenue Growth:** {data.revenue_growth_rate_pct:.1f}% p.a.",
+    ]
+    if data.financials_5yr:
+        lines.append("### Financials (5-Year)")
+        lines.append("| Year | Revenue (USDm) | Rev Growth % | EBITDA (USDm) | EBITDA % | Net Profit (USDm) | NP % | EPS (USD) | CapEx (USDm) | Net Debt (USDm) |")
+        lines.append("|------|----------------|--------------|---------------|----------|-------------------|------|-----------|--------------|-----------------|")
+        for yr in data.financials_5yr:
+            lines.append(
+                f"| {yr.get('year','')} "
+                f"| {yr.get('revenue','—')} "
+                f"| {yr.get('revenue_growth_pct','—')} "
+                f"| {yr.get('ebitda','—')} "
+                f"| {yr.get('ebitda_margin_pct','—')} "
+                f"| {yr.get('net_profit','—')} "
+                f"| {yr.get('net_profit_margin_pct','—')} "
+                f"| {yr.get('eps','—')} "
+                f"| {yr.get('capex','—')} "
+                f"| {yr.get('net_debt','—')} |"
+            )
+    else:
+        lines += [
+            "### Financial Snapshot",
+            f"- **Revenue:** USD {data.revenue_latest_usd_m:.1f}m",
+            f"- **EBITDA:** USD {data.ebitda_latest_usd_m:.1f}m ({data.ebitda_margin_pct:.1f}% margin)",
+            f"- **Net Debt:** USD {data.net_debt_usd_m:.1f}m ({data.net_debt_to_ebitda:.1f}x EBITDA)",
+            f"- **CapEx:** USD {data.capex_usd_m:.1f}m",
+            f"- **Revenue Growth:** {data.revenue_growth_rate_pct:.1f}% p.a.",
+        ]
+
+    lines += [
         f"\n### Management",
         f"- **Quality Score:** {data.management_quality_score:.1f}/10",
         f"\n### Key Shareholders",
@@ -33,13 +57,16 @@ def _format_markdown(data: CompanyAssessment) -> str:
     lines.append(f"\n### Recent Strategic Moves")
     for move in data.recent_strategic_moves:
         lines.append(f"- {move}")
-    lines.append(f"\n### Sector KPIs")
+    lines.append(f"\n### Operational KPIs")
     for k, v in data.sector_kpis.items():
         lines.append(f"- **{k}:** {v}")
-    lines.append(f"\n### Risk Flags")
+    lines.append(f"\n### Risks")
     for flag in data.risk_flags:
         lines.append(f"- {flag}")
     lines += [f"\n### Narrative Summary", data.narrative_summary]
+    lines.append(f"\n### Data Sources")
+    for src in data.data_sources:
+        lines.append(f"- {src}")
     return "\n".join(lines)
 
 
@@ -96,12 +123,20 @@ async def run_company_assessment(assessment_id: str, company: str, buyer_company
         '  "sector_kpis": {"subscribers_m": 45.0, "ARPU_USD": 3.5},\n'
         '  "risk_flags": ["Risk 1"],\n'
         '  "narrative_summary": "2-3 paragraph narrative here.",\n'
+        '  "financials_5yr": [\n'
+        '    {"year": 2020, "revenue": 450.0, "revenue_growth_pct": -5.0, "ebitda": 130.0, "ebitda_margin_pct": 28.9, "net_profit": 45.0, "net_profit_margin_pct": 10.0, "eps": 0.45, "capex": 70.0, "net_debt": 210.0},\n'
+        '    {"year": 2021, "revenue": 470.0, "revenue_growth_pct": 4.4, "ebitda": 138.0, "ebitda_margin_pct": 29.4, "net_profit": 48.0, "net_profit_margin_pct": 10.2, "eps": 0.48, "capex": 72.0, "net_debt": 205.0},\n'
+        '    {"year": 2022, "revenue": 490.0, "revenue_growth_pct": 4.3, "ebitda": 145.0, "ebitda_margin_pct": 29.6, "net_profit": 52.0, "net_profit_margin_pct": 10.6, "eps": 0.52, "capex": 75.0, "net_debt": 200.0},\n'
+        '    {"year": 2023, "revenue": 495.0, "revenue_growth_pct": 1.0, "ebitda": 148.0, "ebitda_margin_pct": 29.9, "net_profit": 50.0, "net_profit_margin_pct": 10.1, "eps": 0.50, "capex": 78.0, "net_debt": 200.0},\n'
+        '    {"year": 2024, "revenue": 500.0, "revenue_growth_pct": 1.0, "ebitda": 150.0, "ebitda_margin_pct": 30.0, "net_profit": 55.0, "net_profit_margin_pct": 11.0, "eps": 0.55, "capex": 80.0, "net_debt": 200.0}\n'
+        '  ],\n'
         '  "cash_position_usd_m": null,\n'
         '  "acquisition_capacity_usd_m": null,\n'
         '  "stated_strategic_priorities": null,\n'
         '  "previous_acquisitions": null\n'
         "}\n\n"
         "Rules: status must be COMPLETE, PARTIAL, or NEEDS_HUMAN_REVIEW. is_buy_side must be false. "
+        "financials_5yr: provide actual 5-year financial data from the research. All monetary values in USD millions. "
         "Return ONLY the JSON object, no other text."
     )
 

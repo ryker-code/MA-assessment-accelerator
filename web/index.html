@@ -7,86 +7,66 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      --bg: #0f172a;
-      --surface: #1e293b;
-      --surface2: #334155;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --accent: #14b8a6;
-      --success: #22c55e;
-      --warning: #f59e0b;
-      --error: #ef4444;
-      --border: #334155;
+      --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --surface3: #475569;
+      --text: #f8fafc; --muted: #94a3b8; --accent: #14b8a6;
+      --success: #22c55e; --warning: #f59e0b; --error: #ef4444; --border: #334155;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
+    /* ── Header ── */
     header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
     }
     .logo { display: flex; align-items: center; gap: 12px; }
-    .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
+    .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
     .logo-text { font-size: 18px; font-weight: 600; }
     .band-link { color: var(--accent); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px; }
     .band-link:hover { text-decoration: underline; }
 
-    main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+    main { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
 
-    /* Input section */
-    #input-section { max-width: 600px; margin: 0 auto; }
-    .section-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    /* ── Input Section ── */
+    #input-section { max-width: 560px; margin: 0 auto; }
+    .section-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
     .section-sub { color: var(--muted); margin-bottom: 32px; font-size: 14px; }
     .form-group { margin-bottom: 20px; }
-    label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
     input[type="text"] {
-      width: 100%; padding: 12px 16px;
-      background: var(--surface); border: 1px solid var(--border);
+      width: 100%; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border);
       border-radius: 8px; color: var(--text); font-size: 15px; font-family: inherit;
       outline: none; transition: border-color 0.2s;
     }
     input[type="text"]:focus { border-color: var(--accent); }
-    .radio-group { display: flex; gap: 12px; }
-    .radio-option {
-      flex: 1; padding: 12px 16px; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
-      display: flex; align-items: center; gap: 10px; font-size: 13px; transition: border-color 0.2s;
-    }
-    .radio-option.selected { border-color: var(--accent); background: rgba(20,184,166,0.08); }
-    .radio-option input { accent-color: var(--accent); }
     .btn-primary {
       width: 100%; padding: 14px; background: var(--accent); color: white;
       border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
-      cursor: pointer; transition: opacity 0.2s; font-family: inherit;
+      cursor: pointer; transition: opacity 0.2s; font-family: inherit; margin-top: 8px;
     }
     .btn-primary:hover { opacity: 0.9; }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* Pipeline */
+    /* ── Pipeline ── */
     #pipeline-section { display: none; }
     .assessment-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
     .assessment-title { font-size: 20px; font-weight: 600; }
     .assessment-meta { color: var(--muted); font-size: 13px; margin-top: 4px; }
-    .status-badge {
-      padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
-      letter-spacing: 0.05em; text-transform: uppercase;
-    }
+    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
     .status-IN_PROGRESS { background: rgba(245,158,11,0.15); color: var(--warning); }
     .status-COMPLETE { background: rgba(34,197,94,0.15); color: var(--success); }
     .status-NEEDS_HUMAN_REVIEW { background: rgba(239,68,68,0.15); color: var(--error); }
 
-    .pipeline-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px;
-    }
+    .row-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; margin-top: 16px; }
+    .row-label:first-child { margin-top: 0; }
+    .pipeline-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 4px; }
+
     .agent-card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 16px; transition: all 0.3s;
+      border-radius: 10px; padding: 14px 16px; transition: all 0.3s;
     }
     .agent-card.running { border-color: var(--accent); animation: pulse-border 2s infinite; }
     .agent-card.complete { border-color: var(--success); background: rgba(34,197,94,0.05); }
@@ -95,103 +75,172 @@
       0%, 100% { box-shadow: 0 0 0 0 rgba(20,184,166,0.3); }
       50% { box-shadow: 0 0 0 4px rgba(20,184,166,0.1); }
     }
-    .agent-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .agent-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
     .agent-role { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
-    .agent-status-badge {
-      display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
-    }
+    .agent-footer { display: flex; align-items: center; justify-content: space-between; }
+    .agent-status-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
     .badge-WAITING { background: var(--surface2); color: var(--muted); }
     .badge-RUNNING { background: rgba(20,184,166,0.2); color: var(--accent); }
     .badge-COMPLETE { background: rgba(34,197,94,0.2); color: var(--success); }
     .badge-ERROR { background: rgba(239,68,68,0.2); color: var(--error); }
-    .agent-time { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .agent-timer { font-size: 12px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .agent-timer.running { color: var(--accent); }
+    .agent-timer.complete { color: var(--success); }
 
-    /* Tabs */
+    /* ── Results / Tabs ── */
     #results-section { display: none; }
-    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 24px; overflow-x: auto; }
+    #new-assessment-btn, #new-assessment-btn2 {
+      padding: 10px 20px; background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); border-radius: 8px; cursor: pointer; font-size: 14px; font-family: inherit; margin-bottom: 24px;
+    }
+    #new-assessment-btn:hover, #new-assessment-btn2:hover { border-color: var(--accent); }
+
+    .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 28px; overflow-x: auto; }
     .tab {
-      padding: 10px 18px; font-size: 13px; font-weight: 500; color: var(--muted);
+      padding: 11px 20px; font-size: 13px; font-weight: 500; color: var(--muted);
       border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent;
       white-space: nowrap; transition: all 0.2s; font-family: inherit;
     }
     .tab:hover { color: var(--text); }
-    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* Markdown rendering */
-    .md-content {
-      background: var(--surface); border-radius: 10px; padding: 24px;
-      line-height: 1.7; font-size: 14px;
+    /* ── Card ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px 24px; margin-bottom: 16px;
     }
-    .md-content h1 { font-size: 22px; margin-bottom: 16px; }
-    .md-content h2 { font-size: 18px; margin: 20px 0 10px; color: var(--accent); }
-    .md-content h3 { font-size: 15px; margin: 16px 0 8px; color: var(--text); }
-    .md-content h4 { font-size: 14px; margin: 12px 0 6px; color: var(--muted); }
-    .md-content p { margin-bottom: 12px; }
-    .md-content ul, .md-content ol { padding-left: 20px; margin-bottom: 12px; }
-    .md-content li { margin-bottom: 4px; }
-    .md-content table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
-    .md-content th { background: var(--surface2); padding: 8px 12px; text-align: left; border: 1px solid var(--border); }
-    .md-content td { padding: 8px 12px; border: 1px solid var(--border); }
-    .md-content tr:nth-child(even) td { background: rgba(51,65,85,0.3); }
-    .md-content code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-    .md-content hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-    .md-content strong { color: var(--text); }
+    .card-title {
+      font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.07em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .card-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+    .card-body { font-size: 14px; line-height: 1.7; }
+    .card-body p { margin-bottom: 8px; }
+    .card-body ul { padding-left: 18px; }
+    .card-body li { margin-bottom: 4px; }
 
-    /* Decision badge */
-    .decision-banner {
-      padding: 24px; border-radius: 12px; text-align: center; margin-bottom: 24px;
+    /* ── Section header (agent block) ── */
+    .agent-section { margin-bottom: 32px; }
+    .agent-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
     }
-    .decision-GO { background: rgba(34,197,94,0.15); border: 2px solid var(--success); }
-    .decision-NO_GO { background: rgba(239,68,68,0.15); border: 2px solid var(--error); }
-    .decision-REVISIT { background: rgba(245,158,11,0.15); border: 2px solid var(--warning); }
-    .decision-label { font-size: 36px; font-weight: 700; letter-spacing: 0.05em; }
+    .agent-section-title { font-size: 18px; font-weight: 700; }
+    .confidence-badge {
+      background: rgba(20,184,166,0.12); border: 1px solid rgba(20,184,166,0.3);
+      color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    }
+    .section-divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+    /* ── Charts ── */
+    .chart-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px 24px; margin-bottom: 16px;
+    }
+    .chart-card-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+    .chart-summary { font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+    .chart-wrap { position: relative; height: 200px; }
+
+    /* ── Risk Cards ── */
+    .risk-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; }
+    .risk-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+    .risk-title { font-size: 15px; font-weight: 700; }
+    .risk-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .risk-badge { padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .risk-badge.HIGH { background: rgba(239,68,68,0.2); color: var(--error); }
+    .risk-badge.MEDIUM { background: rgba(245,158,11,0.2); color: var(--warning); }
+    .risk-badge.LOW { background: rgba(34,197,94,0.2); color: var(--success); }
+    .risk-badge.cat { background: var(--surface2); color: var(--muted); }
+    .risk-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+    .risk-mitigants { font-size: 13px; }
+    .risk-mitigants strong { color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .risk-mitigants ul { padding-left: 16px; margin-top: 4px; }
+    .risk-mitigants li { margin-bottom: 3px; color: var(--muted); }
+
+    /* ── Deal Tab ── */
+    .decision-banner {
+      padding: 28px; border-radius: 14px; text-align: center; margin-bottom: 20px;
+    }
+    .decision-GO { background: rgba(34,197,94,0.1); border: 2px solid rgba(34,197,94,0.4); }
+    .decision-NO_GO { background: rgba(239,68,68,0.1); border: 2px solid rgba(239,68,68,0.4); }
+    .decision-REVISIT { background: rgba(245,158,11,0.1); border: 2px solid rgba(245,158,11,0.4); }
+    .decision-label { font-size: 40px; font-weight: 800; letter-spacing: 0.04em; }
     .decision-GO .decision-label { color: var(--success); }
     .decision-NO_GO .decision-label { color: var(--error); }
     .decision-REVISIT .decision-label { color: var(--warning); }
     .decision-sub { font-size: 14px; color: var(--muted); margin-top: 6px; }
 
-    /* Risk matrix */
-    .risk-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-bottom: 24px; max-width: 360px; }
-    .risk-cell {
-      height: 80px; border-radius: 6px; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; font-size: 11px; font-weight: 600;
-      color: var(--muted); text-transform: uppercase;
-    }
-    .cell-HH { background: rgba(239,68,68,0.3); color: var(--error); }
-    .cell-HM { background: rgba(239,68,68,0.15); color: #fc8181; }
-    .cell-HL { background: rgba(245,158,11,0.2); color: var(--warning); }
-    .cell-MH { background: rgba(245,158,11,0.2); color: var(--warning); }
-    .cell-MM { background: rgba(245,158,11,0.1); color: #fbbf24; }
-    .cell-ML { background: rgba(34,197,94,0.1); color: #86efac; }
-    .cell-LH { background: rgba(245,158,11,0.15); color: var(--warning); }
-    .cell-LM { background: rgba(34,197,94,0.1); color: #86efac; }
-    .cell-LL { background: rgba(34,197,94,0.2); color: var(--success); }
-    .risk-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; margin: 2px; }
-    .matrix-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .value-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; display: flex; gap: 14px; align-items: flex-start; }
+    .value-card-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+    .value-card-body { flex: 1; }
+    .value-card-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .value-card-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .value-card-impact { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+    .impact-HIGH { background: rgba(34,197,94,0.15); color: var(--success); }
+    .impact-MEDIUM { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .impact-LOW { background: rgba(148,163,184,0.15); color: var(--muted); }
 
-    /* Valuation bar */
-    .valuation-bar-wrap { margin: 16px 0; }
-    .valuation-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
-    .valuation-track { height: 20px; background: var(--surface2); border-radius: 10px; position: relative; }
-    .valuation-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--accent), var(--success)); }
-    .valuation-range { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .valuation-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+    .val-track { height: 20px; background: var(--surface2); border-radius: 10px; position: relative; margin: 10px 0; }
+    .val-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--accent), var(--success)); min-width: 20px; }
+    .val-range { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+
+    .steps-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+    .steps-card ol { padding-left: 20px; }
+    .steps-card li { font-size: 14px; margin-bottom: 8px; line-height: 1.6; }
+
+    /* ── Data Sources Card ── */
+    .sources-card { background: rgba(20,184,166,0.04); border: 1px solid rgba(20,184,166,0.2); border-radius: 12px; padding: 16px 20px; margin-top: 8px; }
+    .sources-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--accent); margin-bottom: 10px; }
+    .sources-list { display: flex; flex-direction: column; gap: 4px; }
+    .source-link { font-size: 12px; color: var(--muted); text-decoration: none; word-break: break-all; }
+    .source-link:hover { color: var(--accent); }
+
+    /* ── Financials Table ── */
+    .fin-table-wrap { overflow-x: auto; }
+    .fin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .fin-table th { background: var(--surface2); padding: 9px 12px; text-align: right; border: 1px solid var(--border); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .fin-table th:first-child { text-align: left; }
+    .fin-table td { padding: 8px 12px; border: 1px solid var(--border); text-align: right; color: var(--muted); }
+    .fin-table td:first-child { font-weight: 600; color: var(--text); text-align: left; }
+    .fin-table tr:nth-child(even) td { background: rgba(51,65,85,0.25); }
+
+    /* ── Markdown fallback ── */
+    .md-content { line-height: 1.7; font-size: 14px; }
+    .md-content h1 { font-size: 22px; margin-bottom: 16px; }
+    .md-content h2 { font-size: 18px; margin: 20px 0 10px; color: var(--accent); }
+    .md-content h3 { font-size: 15px; margin: 16px 0 8px; }
+    .md-content h4 { font-size: 13px; margin: 12px 0 6px; color: var(--muted); }
+    .md-content p { margin-bottom: 10px; }
+    .md-content ul, .md-content ol { padding-left: 20px; margin-bottom: 10px; }
+    .md-content li { margin-bottom: 4px; }
+    .md-content table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 13px; }
+    .md-content th { background: var(--surface2); padding: 8px 12px; text-align: left; border: 1px solid var(--border); }
+    .md-content td { padding: 8px 12px; border: 1px solid var(--border); }
+    .md-content tr:nth-child(even) td { background: rgba(51,65,85,0.3); }
+    .md-content code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .md-content hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+    .md-content strong { color: var(--text); }
+
+    /* ── Tab Navigation ── */
+    .tab-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); }
+    .tab-nav-btn {
+      padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
+      cursor: pointer; font-family: inherit; transition: all 0.2s;
+      border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    }
+    .tab-nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .tab-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .tab-nav-center { font-size: 13px; color: var(--muted); }
+
+    /* ── Pie chart container ── */
+    .pie-wrap { position: relative; height: 220px; max-width: 320px; margin: 0 auto; }
 
     .loading { color: var(--muted); font-size: 14px; padding: 32px; text-align: center; }
     .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    #new-assessment-btn {
-      padding: 10px 20px; background: var(--surface); border: 1px solid var(--border);
-      color: var(--text); border-radius: 8px; cursor: pointer; font-size: 14px; font-family: inherit;
-      margin-bottom: 24px;
-    }
-    #new-assessment-btn:hover { border-color: var(--accent); }
-
-    /* Initial section visibility — JS controls transitions */
-    #pipeline-section { display: none; }
-    #results-section  { display: none; }
   </style>
 </head>
 <body>
@@ -211,8 +260,7 @@
   <!-- Input Section -->
   <div id="input-section">
     <div class="section-title">Start New Assessment</div>
-    <div class="section-sub">Enter the acquirer and target to launch a 9-agent M&A analysis</div>
-
+    <div class="section-sub">Enter the acquirer and target to launch a 9-agent M&amp;A analysis</div>
     <div class="form-group">
       <label>Acquirer / Buy-Side Company</label>
       <input type="text" id="buyer-input" placeholder="e.g. stc — Saudi Telecom Company" />
@@ -221,24 +269,12 @@
       <label>Target / Sell-Side Company</label>
       <input type="text" id="target-input" placeholder="e.g. Telenor Pakistan" />
     </div>
-    <div class="form-group">
-      <label>Assessment Type</label>
-      <div class="radio-group">
-        <label class="radio-option selected" id="radio-l1">
-          <input type="radio" name="assessment_type" value="LEVEL_1" /> Level 1 — Ongoing Monitoring
-        </label>
-        <label class="radio-option" id="radio-l2">
-          <input type="radio" name="assessment_type" value="LEVEL_2" /> Level 2 — Near-term Opportunity
-        </label>
-      </div>
-    </div>
     <button class="btn-primary" id="start-btn" onclick="startAssessment()">Start Assessment</button>
   </div>
 
   <!-- Pipeline Section -->
   <div id="pipeline-section">
     <button id="new-assessment-btn" onclick="resetToInput()">← New Assessment</button>
-
     <div class="assessment-header">
       <div>
         <div class="assessment-title" id="assessment-title">Assessment in progress...</div>
@@ -247,11 +283,17 @@
       <div class="status-badge status-IN_PROGRESS" id="overall-status-badge">IN PROGRESS</div>
     </div>
 
-    <div class="pipeline-grid" id="pipeline-grid"></div>
+    <div class="row-label">Buy-Side Agents</div>
+    <div class="pipeline-row" id="row-buyer"></div>
+    <div class="row-label">Sell-Side Agents</div>
+    <div class="pipeline-row" id="row-target"></div>
+    <div class="row-label">Synthesis Agents</div>
+    <div class="pipeline-row" id="row-synthesis"></div>
   </div>
 
   <!-- Results Section -->
   <div id="results-section">
+    <button id="new-assessment-btn2" onclick="resetToInput()">← New Assessment</button>
     <div class="tabs" id="tabs-bar"></div>
     <div id="tabs-content"></div>
   </div>
@@ -259,100 +301,142 @@
 </main>
 
 <script>
-// === Constants ===
-const BAND_ROOM_URL = ''; // Set to your Band room URL if available
-
-const AGENTS = [
-  { id: 'country-agent',        label: '@country-agent',        role: 'Target Country Research',   phase: 1 },
-  { id: 'sector-agent',         label: '@sector-agent',         role: 'Target Sector Research',    phase: 1 },
-  { id: 'company-agent',        label: '@company-agent',        role: 'Target Company Research',   phase: 1 },
-  { id: 'buyer-country-agent',  label: '@buyer-country-agent',  role: 'Buyer Country Research',    phase: 1 },
-  { id: 'buyer-sector-agent',   label: '@buyer-sector-agent',   role: 'Buyer Sector Research',     phase: 1 },
-  { id: 'buyer-company-agent',  label: '@buyer-company-agent',  role: 'Buyer Company Research',    phase: 1 },
-  { id: 'risk-agent',           label: '@risk-agent',           role: 'Risk Synthesis',            phase: 2 },
-  { id: 'deal-rationale-agent', label: '@deal-rationale-agent', role: 'Deal Recommendation',      phase: 3 },
-  { id: 'coordinator',          label: '@coordinator',          role: 'Orchestrator',              phase: 0 },
+// ── Constants ──────────────────────────────────────────────────────────────────
+const BUYER_AGENTS = [
+  { id: 'buyer-country-agent', label: '@buyer-country-agent', role: 'Buyer Country Research',  phase: 1 },
+  { id: 'buyer-sector-agent',  label: '@buyer-sector-agent',  role: 'Buyer Sector Research',   phase: 1 },
+  { id: 'buyer-company-agent', label: '@buyer-company-agent', role: 'Buyer Company Research',  phase: 1 },
 ];
+const TARGET_AGENTS = [
+  { id: 'country-agent',       label: '@country-agent',       role: 'Target Country Research', phase: 1 },
+  { id: 'sector-agent',        label: '@sector-agent',        role: 'Target Sector Research',  phase: 1 },
+  { id: 'company-agent',       label: '@company-agent',       role: 'Target Company Research', phase: 1 },
+];
+const SYNTH_AGENTS = [
+  { id: 'risk-agent',           label: '@risk-agent',           role: 'Risk Synthesis',       phase: 2 },
+  { id: 'deal-rationale-agent', label: '@deal-rationale-agent', role: 'Deal Recommendation',  phase: 3 },
+  { id: 'coordinator',          label: '@coordinator',          role: 'Orchestrator',          phase: 0 },
+];
+const ALL_AGENTS = [...BUYER_AGENTS, ...TARGET_AGENTS, ...SYNTH_AGENTS];
 
 const AGENT_FILES = {
-  'country-agent':        { index: '01', tabGroup: 0 },
-  'sector-agent':         { index: '02', tabGroup: 0 },
+  'country-agent':        { index: '01', tabGroup: 1 },
+  'sector-agent':         { index: '02', tabGroup: 1 },
   'company-agent':        { index: '03', tabGroup: 1 },
-  'buyer-country-agent':  { index: '04', tabGroup: 2 },
-  'buyer-sector-agent':   { index: '05', tabGroup: 2 },
-  'buyer-company-agent':  { index: '06', tabGroup: 2 },
-  'risk-agent':           { index: '07', tabGroup: 3 },
-  'deal-rationale-agent': { index: '08', tabGroup: 4 },
+  'buyer-country-agent':  { index: '04', tabGroup: 0 },
+  'buyer-sector-agent':   { index: '05', tabGroup: 0 },
+  'buyer-company-agent':  { index: '06', tabGroup: 0 },
+  'risk-agent':           { index: '07', tabGroup: 2 },
+  'deal-rationale-agent': { index: '08', tabGroup: 3 },
 };
 
 const TAB_DEFS = [
-  { id: 'tab-sell-country',  label: 'Sell-Side: Country/Sector',  agents: ['country-agent','sector-agent'] },
-  { id: 'tab-sell-company',  label: 'Sell-Side: Company',         agents: ['company-agent'] },
-  { id: 'tab-buy-side',      label: 'Buy-Side',                   agents: ['buyer-country-agent','buyer-sector-agent','buyer-company-agent'] },
-  { id: 'tab-risk',          label: 'Risk Assessment',            agents: ['risk-agent'] },
-  { id: 'tab-decision',      label: 'Deal Recommendation',        agents: ['deal-rationale-agent'] },
+  { id: 'tab-buy',  label: 'Buy Side Analysis',  agents: ['buyer-country-agent','buyer-sector-agent','buyer-company-agent'], type: 'buy' },
+  { id: 'tab-sell', label: 'Sell Side Analysis', agents: ['country-agent','sector-agent','company-agent'], type: 'sell' },
+  { id: 'tab-risk', label: 'Risk Assessment',    agents: ['risk-agent'], type: 'risk' },
+  { id: 'tab-deal', label: 'Deal Recommendation',agents: ['deal-rationale-agent'], type: 'deal' },
 ];
 
-// === State ===
+// ── State ──────────────────────────────────────────────────────────────────────
 let currentAssessmentId = null;
 let pollTimer = null;
-let renderedTabs = new Set();
-let tabContents = {}; // tabId -> markdown strings array
+let renderedAgents = new Set();
+let tabContents = {};   // tabIdx -> [{agentId, content}]
 let agentStartTimes = {};
+let agentEndTimes = {};
+let timerInterval = null;
 let manifest = null;
+let chartRegistry = {};
 
-// === UI helpers ===
-function show(id) { document.getElementById(id).style.display = 'block'; }
-function hide(id) { document.getElementById(id).style.display = 'none'; }
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function show(id) { const el = document.getElementById(id); if(el) el.style.display='block'; }
+function hide(id) { const el = document.getElementById(id); if(el) el.style.display='none'; }
 
-function renderPipelineGrid(completedAgents, currentPhase) {
-  const grid = document.getElementById('pipeline-grid');
-  grid.innerHTML = AGENTS.map(agent => {
-    const completed = completedAgents && completedAgents[agent.id];
-    const isRunning = !completed && isAgentRunning(agent, currentPhase, completedAgents);
-    let cardClass = 'agent-card';
-    let badgeClass = 'badge-WAITING';
-    let badgeText = 'WAITING';
-    let timeText = '';
-
-    if (completed) {
-      cardClass += ' complete';
-      badgeClass = 'badge-COMPLETE';
-      badgeText = 'COMPLETE';
-      if (completed.completed_at) {
-        const start = agentStartTimes[agent.id] || completed.completed_at;
-        timeText = `Completed`;
-      }
-    } else if (isRunning) {
-      cardClass += ' running';
-      badgeClass = 'badge-RUNNING';
-      badgeText = 'RUNNING';
-      agentStartTimes[agent.id] = agentStartTimes[agent.id] || Date.now();
-    }
-
-    return `
-      <div class="${cardClass}" id="card-${agent.id}">
-        <div class="agent-name">${agent.label}</div>
-        <div class="agent-role">${agent.role}</div>
-        <span class="agent-status-badge ${badgeClass}">${badgeText}</span>
-        ${timeText ? `<div class="agent-time">${timeText}</div>` : ''}
-      </div>`;
-  }).join('');
+function formatTime(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  return `${String(m).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
 }
 
-function isAgentRunning(agent, phase, completedAgents) {
+function isAgentRunning(agent, phase, completed) {
+  if (completed && completed[agent.id]) return false;
   if (agent.id === 'coordinator') return phase !== 'COMPLETE';
-  if (agent.phase === 1) return phase === 'PHASE_1' || phase === 'PHASE_2' || phase === 'PHASE_3';
+  if (agent.phase === 1) return ['PHASE_1','PHASE_2','PHASE_3'].includes(phase);
   if (agent.phase === 2) return phase === 'PHASE_2';
   if (agent.phase === 3) return phase === 'PHASE_3';
   return false;
 }
 
-// === API calls ===
+// ── Grid Rendering ────────────────────────────────────────────────────────────
+function renderAgentCard(agent, completed, phase) {
+  const info = completed && completed[agent.id];
+  const running = !info && isAgentRunning(agent, phase, completed);
+  if (running && !agentStartTimes[agent.id]) agentStartTimes[agent.id] = Date.now();
+  if (info && !agentEndTimes[agent.id]) agentEndTimes[agent.id] = Date.now();
+
+  let cls = 'agent-card';
+  let badgeCls = 'badge-WAITING', badgeTxt = 'Waiting';
+  if (info)    { cls += ' complete'; badgeCls = 'badge-COMPLETE'; badgeTxt = 'Complete'; }
+  else if (running) { cls += ' running';  badgeCls = 'badge-RUNNING';  badgeTxt = 'Running'; }
+
+  const elapsed = info
+    ? formatTime((agentEndTimes[agent.id] || Date.now()) - (agentStartTimes[agent.id] || Date.now()))
+    : (running ? formatTime(Date.now() - agentStartTimes[agent.id]) : '');
+  const timerCls = info ? 'agent-timer complete' : (running ? 'agent-timer running' : 'agent-timer');
+
+  return `
+    <div class="${cls}" id="card-${agent.id}">
+      <div class="agent-name">${agent.label}</div>
+      <div class="agent-role">${agent.role}</div>
+      <div class="agent-footer">
+        <span class="agent-status-badge ${badgeCls}">${badgeTxt}</span>
+        <span class="${timerCls}" id="timer-${agent.id}">${elapsed}</span>
+      </div>
+    </div>`;
+}
+
+function renderGrid(completed, phase) {
+  ['row-buyer','row-target','row-synthesis'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+  const groups = [
+    { rowId: 'row-buyer',     agents: BUYER_AGENTS },
+    { rowId: 'row-target',    agents: TARGET_AGENTS },
+    { rowId: 'row-synthesis', agents: SYNTH_AGENTS },
+  ];
+  for (const g of groups) {
+    const row = document.getElementById(g.rowId);
+    if (row) row.innerHTML = g.agents.map(a => renderAgentCard(a, completed, phase)).join('');
+  }
+}
+
+function startTimerTick() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const completed = manifest?.completed_agents || {};
+    const phase = manifest?.phase || 'PHASE_1';
+    for (const agent of ALL_AGENTS) {
+      const el = document.getElementById(`timer-${agent.id}`);
+      if (!el) continue;
+      const info = completed[agent.id];
+      const running = !info && isAgentRunning(agent, phase, completed);
+      if (running && agentStartTimes[agent.id]) {
+        el.textContent = formatTime(Date.now() - agentStartTimes[agent.id]);
+        el.className = 'agent-timer running';
+      } else if (info && agentStartTimes[agent.id]) {
+        const end = agentEndTimes[agent.id] || Date.now();
+        el.textContent = formatTime(end - agentStartTimes[agent.id]);
+        el.className = 'agent-timer complete';
+      }
+    }
+  }, 1000);
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
 async function startAssessment() {
   const buyer = document.getElementById('buyer-input').value.trim();
   const target = document.getElementById('target-input').value.trim();
-  const type = document.querySelector('input[name="assessment_type"]:checked')?.value || 'LEVEL_2';
   if (!buyer || !target) { alert('Please enter both companies'); return; }
 
   const btn = document.getElementById('start-btn');
@@ -362,22 +446,18 @@ async function startAssessment() {
     const resp = await fetch('/assessments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ buyer_company: buyer, target_company: target, assessment_type: type }),
+      body: JSON.stringify({ buyer_company: buyer, target_company: target, assessment_type: 'LEVEL_2' }),
     });
     const data = await resp.json();
     currentAssessmentId = data.assessment_id;
 
     document.getElementById('assessment-title').textContent = `${buyer} → ${target}`;
-    document.getElementById('assessment-meta').textContent = `ID: ${currentAssessmentId} · ${type}`;
-
-    if (BAND_ROOM_URL) {
-      const link = document.getElementById('band-room-link');
-      link.href = BAND_ROOM_URL; link.style.display = '';
-    }
+    document.getElementById('assessment-meta').textContent = `ID: ${currentAssessmentId}`;
 
     hide('input-section');
     show('pipeline-section');
-    renderPipelineGrid({}, 'PHASE_1');
+    renderGrid({}, 'PHASE_1');
+    startTimerTick();
     startPolling();
   } catch (e) {
     alert('Failed to start assessment: ' + e.message);
@@ -396,130 +476,724 @@ async function poll() {
     const resp = await fetch(`/assessments/${currentAssessmentId}`);
     manifest = await resp.json();
     if (manifest.status === 'not_found') return;
-    updateUI(manifest);
+    await updateUI(manifest);
     if (manifest.overall_status === 'COMPLETE' || manifest.overall_status === 'NEEDS_HUMAN_REVIEW') {
       clearInterval(pollTimer);
+      clearInterval(timerInterval);
+      hide('pipeline-section');
     }
   } catch (e) { /* network hiccup */ }
 }
 
-async function updateUI(manifest) {
-  // Update overall status badge
+async function updateUI(m) {
   const badge = document.getElementById('overall-status-badge');
-  badge.textContent = manifest.overall_status || 'IN_PROGRESS';
-  badge.className = 'status-badge status-' + (manifest.overall_status || 'IN_PROGRESS');
+  badge.textContent = m.overall_status || 'IN_PROGRESS';
+  badge.className = 'status-badge status-' + (m.overall_status || 'IN_PROGRESS');
 
-  // Update pipeline grid
-  renderPipelineGrid(manifest.completed_agents || {}, manifest.phase || 'PHASE_1');
+  renderGrid(m.completed_agents || {}, m.phase || 'PHASE_1');
 
-  // Fetch and render newly completed agent files
-  const completed = manifest.completed_agents || {};
+  const completed = m.completed_agents || {};
   for (const [agentId, info] of Object.entries(completed)) {
-    const agentDef = AGENT_FILES[agentId];
-    if (!agentDef || renderedTabs.has(agentId)) continue;
-    renderedTabs.add(agentId);
-    const filename = `${agentDef.index}_${agentId.replace(/-/g, '_')}.md`;
+    const def = AGENT_FILES[agentId];
+    if (!def || renderedAgents.has(agentId)) continue;
+    renderedAgents.add(agentId);
+    if (!agentEndTimes[agentId]) agentEndTimes[agentId] = Date.now();
+    const filename = `${def.index}_${agentId.replace(/-/g,'_')}.md`;
     try {
       const r = await fetch(`/assessments/${currentAssessmentId}/files/${filename}`);
-      const fileData = await r.json();
-      addContentToTab(agentDef.tabGroup, agentId, fileData.content);
-    } catch (e) {}
+      const fd = await r.json();
+      addToTab(def.tabGroup, agentId, fd.content);
+    } catch(e) {}
   }
 }
 
-function addContentToTab(tabIdx, agentId, content) {
-  const tabDef = TAB_DEFS[tabIdx];
+function addToTab(tabIdx, agentId, content) {
   if (!tabContents[tabIdx]) tabContents[tabIdx] = [];
-  tabContents[tabIdx].push(content);
-  renderTab(tabIdx, tabDef, tabContents[tabIdx]);
+  tabContents[tabIdx].push({ agentId, content });
+  renderTabPane(tabIdx);
 }
 
-function renderTab(tabIdx, tabDef, contentParts) {
+function ensureAllTabsExist() {
   const tabsBar = document.getElementById('tabs-bar');
   const tabsContent = document.getElementById('tabs-content');
   show('results-section');
-
-  // Ensure tab button exists
-  if (!document.getElementById(tabDef.id + '-btn')) {
+  TAB_DEFS.forEach((tabDef, tabIdx) => {
+    if (document.getElementById(tabDef.id + '-btn')) return;
     const btn = document.createElement('button');
     btn.className = 'tab'; btn.id = tabDef.id + '-btn';
     btn.textContent = tabDef.label;
-    btn.onclick = () => activateTab(tabIdx, tabDef);
+    btn.onclick = () => activateTab(tabIdx);
     tabsBar.appendChild(btn);
-
     const pane = document.createElement('div');
     pane.className = 'tab-content'; pane.id = tabDef.id + '-pane';
     tabsContent.appendChild(pane);
-
-    // Activate first tab automatically
-    if (tabsBar.querySelectorAll('.tab').length === 1) activateTab(tabIdx, tabDef);
-  }
-
-  const pane = document.getElementById(tabDef.id + '-pane');
-  const combined = contentParts.join('\n\n---\n\n');
-
-  if (tabIdx === 4) {
-    // Decision tab — special rendering
-    pane.innerHTML = renderDecisionTab(combined, manifest);
-  } else if (tabIdx === 3) {
-    // Risk tab — add matrix
-    pane.innerHTML = renderRiskTab(combined);
-  } else {
-    pane.innerHTML = `<div class="md-content">${marked.parse(combined)}</div>`;
-  }
+  });
+  if (!document.querySelector('#tabs-bar .tab.active')) activateTab(0);
 }
 
-function renderDecisionTab(content, manifest) {
-  const decision = manifest?.decision || 'REVISIT';
-  const decisionLabels = { GO: '✅ GO', NO_GO: '❌ NO-GO', REVISIT: '⏳ REVISIT' };
-  const val = manifest?.implied_valuation_range_usd_m || {};
-  const low = val.low || 0; const high = val.high || 0;
+function renderTabPane(tabIdx) {
+  ensureAllTabsExist();
+  const tabDef = TAB_DEFS[tabIdx];
+  const pane = document.getElementById(tabDef.id + '-pane');
+  const items = tabContents[tabIdx] || [];
 
-  let html = `
-    <div class="decision-banner decision-${decision}">
-      <div class="decision-label">${decisionLabels[decision] || decision}</div>
-      <div class="decision-sub">Strategic Fit Score: ${manifest?.strategic_fit_score?.toFixed(1) || '—'}/10</div>
-    </div>`;
+  let html = '';
+  for (let i = 0; i < items.length; i++) {
+    if (i > 0) html += '<hr class="section-divider">';
+    html += renderAgentSection(tabDef.type, items[i].agentId, items[i].content, tabIdx);
+  }
+  html += renderTabNav(tabIdx);
+  pane.innerHTML = html;
 
-  if (high > 0) {
-    const pct = Math.min(100, ((high - low) / high) * 100);
-    html += `
-      <div class="valuation-bar-wrap">
-        <div class="valuation-label">Implied Enterprise Value Range</div>
-        <div class="valuation-track"><div class="valuation-fill" style="width:${pct}%"></div></div>
-        <div class="valuation-range"><span>USD ${low.toLocaleString()}m</span><span>USD ${high.toLocaleString()}m</span></div>
-      </div>`;
+  // Re-init charts in pane
+  initChartsInPane(pane, items, tabDef.type);
+}
+
+// ── Per-agent section renderer ────────────────────────────────────────────────
+function renderAgentSection(tabType, agentId, rawContent, tabIdx) {
+  const { title, confidence, mainContent } = parseAgentHeader(rawContent);
+
+  let body = '';
+  if (tabType === 'sell' && agentId === 'country-agent') {
+    body = renderSellCountry(mainContent);
+  } else if (tabType === 'sell' && agentId === 'sector-agent') {
+    body = renderSellSector(mainContent);
+  } else if ((tabType === 'sell' && agentId === 'company-agent') || (tabType === 'buy' && agentId === 'buyer-company-agent')) {
+    body = renderCompany(mainContent);
+  } else if (tabType === 'risk') {
+    body = renderRisk(mainContent);
+  } else if (tabType === 'deal') {
+    return renderDeal(mainContent, title, confidence);
+  } else {
+    body = renderGeneric(mainContent);
   }
 
-  html += `<div class="md-content">${marked.parse(content)}</div>`;
+  return `
+    <div class="agent-section">
+      <div class="agent-section-header">
+        <div class="agent-section-title">${escHtml(title)}</div>
+        ${confidence ? `<span class="confidence-badge">Confidence: ${escHtml(confidence)}</span>` : ''}
+      </div>
+      ${body}
+    </div>`;
+}
+
+// ── Header parser ──────────────────────────────────────────────────────────────
+function parseAgentHeader(raw) {
+  const lines = raw.split('\n');
+  let title = '', confidence = '';
+  let inMetaTable = false, metaEnd = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i].trim();
+    if (l.startsWith('# ') && !title) { title = l.slice(2).trim(); continue; }
+    if (l.startsWith('## ') && !title) { title = l.slice(3).trim(); continue; }
+    if (l.match(/^\|.*Key.*\|.*Value.*\|/i)) { inMetaTable = true; continue; }
+    if (inMetaTable && l.startsWith('|')) {
+      const m = l.match(/\|\s*confidence\s*\|\s*([^|]+)\|/i);
+      if (m) confidence = m[1].trim();
+      metaEnd = i; continue;
+    }
+    if (inMetaTable && !l.startsWith('|')) { inMetaTable = false; }
+    if (l === '---') { metaEnd = i; break; }
+  }
+  const mainContent = lines.slice(metaEnd + 1).join('\n').trim();
+  return { title, confidence, mainContent };
+}
+
+// ── Section parsers ───────────────────────────────────────────────────────────
+function parseSections(text) {
+  const sections = [];
+  const re = /^###\s+(.+)$/gm;
+  let match, prev = null;
+  while ((match = re.exec(text)) !== null) {
+    if (prev) {
+      sections.push({ heading: prev.heading, content: text.slice(prev.end, match.index).trim() });
+    }
+    prev = { heading: match[1].trim(), end: match.index + match[0].length };
+  }
+  if (prev) sections.push({ heading: prev.heading, content: text.slice(prev.end).trim() });
+  return sections;
+}
+
+function parseListItems(text) {
+  return text.split('\n').filter(l => l.trim().startsWith('-')).map(l => l.replace(/^-\s*/, '').trim());
+}
+
+function parseYearValues(text) {
+  const items = [];
+  for (const l of text.split('\n')) {
+    const m = l.match(/[-*]\s*(\d{4})\s*:\s*([\d.,-]+)/);
+    if (m) items.push({ year: parseInt(m[1]), value: parseFloat(m[2].replace(',','')) });
+  }
+  return items;
+}
+
+function parsePlayerShares(text) {
+  const labels = [], values = [];
+  for (const l of text.split('\n')) {
+    const m = l.match(/[-*]\s*(.+?)\s*:\s*([\d.]+)%?/);
+    if (m) { labels.push(m[1].trim()); values.push(parseFloat(m[2])); }
+  }
+  return { labels, values };
+}
+
+// ── Sell Side Country ──────────────────────────────────────────────────────────
+function renderSellCountry(content) {
+  const sections = parseSections(content);
+  let html = '';
+  const chartSections = ['GDP Growth', 'Inflation Rate', 'Currency Exchange'];
+  const skipH2 = true;
+
+  // Strip leading h2/status line
+  const cleanContent = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+
+  for (const sec of parseSections(cleanContent)) {
+    const h = sec.heading;
+    if (h.includes('Data Sources')) {
+      html += renderDataSources(parseListItems(sec.content));
+    } else if (h.includes('GDP Growth') || h.includes('Inflation Rate') || h.includes('Currency Exchange')) {
+      html += `<div class="chart-card" data-chart-type="line" data-chart-section="${escHtml(h)}" data-chart-data="${escHtml(sec.content)}">
+        <div class="chart-card-title">${escHtml(h)}</div>
+        <div class="chart-summary" id="chart-summary-${slugify(h)}"></div>
+        <div class="chart-wrap"><canvas id="chart-${slugify(h)}"></canvas></div>
+      </div>`;
+    } else {
+      html += `<div class="card">
+        <div class="card-title"><span class="dot"></span>${escHtml(h)}</div>
+        <div class="card-body">${marked.parse(sec.content)}</div>
+      </div>`;
+    }
+  }
   return html;
 }
 
-function renderRiskTab(content) {
-  const severities = ['HIGH', 'MEDIUM', 'LOW'];
-  const probabilities = ['HIGH', 'MEDIUM', 'LOW'];
-  let matrixHtml = '<div class="matrix-label">Risk Matrix (Severity × Probability)</div><div class="risk-matrix">';
-  for (const s of severities) {
-    for (const p of probabilities) {
-      matrixHtml += `<div class="risk-cell cell-${s[0]}${p[0]}"><span>${s[0]}/${p[0]}</span></div>`;
+// ── Sell Side Sector ──────────────────────────────────────────────────────────
+function renderSellSector(content) {
+  const cleanContent = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+  let html = '';
+  for (const sec of parseSections(cleanContent)) {
+    const h = sec.heading;
+    if (h.includes('Data Sources')) {
+      html += renderDataSources(parseListItems(sec.content));
+    } else if (h === 'Market Overview') {
+      html += renderSectorMarketOverview(sec.content);
+    } else {
+      html += `<div class="card">
+        <div class="card-title"><span class="dot"></span>${escHtml(h)}</div>
+        <div class="card-body">${marked.parse(sec.content)}</div>
+      </div>`;
     }
   }
-  matrixHtml += '</div>';
-  return matrixHtml + `<div class="md-content">${marked.parse(content)}</div>`;
+  return html;
 }
 
-function activateTab(tabIdx, tabDef) {
+function renderSectorMarketOverview(content) {
+  // Split sub-sections (####)
+  const subSections = [];
+  const re = /^####\s+(.+)$/gm;
+  let match, prev = null;
+  while ((match = re.exec(content)) !== null) {
+    if (prev) subSections.push({ heading: prev.h, content: content.slice(prev.end, match.index).trim() });
+    prev = { h: match[1].trim(), end: match.index + match[0].length };
+  }
+  if (prev) subSections.push({ heading: prev.h, content: content.slice(prev.end).trim() });
+  const mainContent = prev ? content.slice(0, content.indexOf('\n####')).trim() : content;
+
+  let html = `<div class="card">
+    <div class="card-title"><span class="dot"></span>Market Overview</div>
+    <div class="card-body">${marked.parse(mainContent)}</div>`;
+
+  for (const sub of subSections) {
+    if (sub.heading.includes('Market Size History')) {
+      html += `<div class="chart-card" style="margin-top:12px" data-chart-type="bar" data-chart-section="${escHtml(sub.heading)}" data-chart-data="${escHtml(sub.content)}">
+        <div class="chart-card-title">${escHtml(sub.heading)}</div>
+        <div class="chart-wrap"><canvas id="chart-${slugify(sub.heading)}"></canvas></div>
+      </div>`;
+    } else if (sub.heading.includes('Market Share')) {
+      html += `<div class="chart-card" style="margin-top:12px" data-chart-type="pie" data-chart-section="${escHtml(sub.heading)}" data-chart-data="${escHtml(sub.content)}">
+        <div class="chart-card-title">${escHtml(sub.heading)}</div>
+        <div class="pie-wrap"><canvas id="chart-${slugify(sub.heading)}"></canvas></div>
+      </div>`;
+    } else {
+      html += `<div style="margin-top:10px"><div class="card-title" style="margin-top:8px"><span class="dot"></span>${escHtml(sub.heading)}</div>
+        <div class="card-body">${marked.parse(sub.content)}</div></div>`;
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+// ── Company ───────────────────────────────────────────────────────────────────
+function renderCompany(content) {
+  const cleanContent = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+  let html = '';
+  for (const sec of parseSections(cleanContent)) {
+    const h = sec.heading;
+    if (h.includes('Data Sources')) {
+      html += renderDataSources(parseListItems(sec.content));
+    } else if (h.includes('Financials')) {
+      html += renderFinancialsTable(sec.content, h);
+    } else {
+      html += `<div class="card">
+        <div class="card-title"><span class="dot"></span>${escHtml(h)}</div>
+        <div class="card-body">${marked.parse(sec.content)}</div>
+      </div>`;
+    }
+  }
+  return html;
+}
+
+function renderFinancialsTable(content, heading) {
+  // Try to parse as markdown table
+  const rows = content.split('\n').filter(l => l.includes('|'));
+  if (rows.length < 2) return `<div class="card"><div class="card-title"><span class="dot"></span>${escHtml(heading)}</div><div class="card-body">${marked.parse(content)}</div></div>`;
+
+  const headers = rows[0].split('|').map(c => c.trim()).filter(Boolean);
+  const dataRows = rows.slice(2).map(r => r.split('|').map(c => c.trim()).filter(Boolean));
+
+  let tableHtml = `<div class="fin-table-wrap"><table class="fin-table"><thead><tr>`;
+  for (const h of headers) tableHtml += `<th>${escHtml(h)}</th>`;
+  tableHtml += '</tr></thead><tbody>';
+  for (const row of dataRows) {
+    tableHtml += '<tr>';
+    for (const cell of row) tableHtml += `<td>${escHtml(cell)}</td>`;
+    tableHtml += '</tr>';
+  }
+  tableHtml += '</tbody></table></div>';
+
+  return `<div class="card">
+    <div class="card-title"><span class="dot"></span>${escHtml(heading)}</div>
+    ${tableHtml}
+  </div>`;
+}
+
+// ── Generic (buy-side country/sector) ─────────────────────────────────────────
+function renderGeneric(content) {
+  const cleanContent = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+  let html = '';
+  for (const sec of parseSections(cleanContent)) {
+    const h = sec.heading;
+    if (h.includes('Data Sources')) {
+      html += renderDataSources(parseListItems(sec.content));
+    } else {
+      html += `<div class="card">
+        <div class="card-title"><span class="dot"></span>${escHtml(h)}</div>
+        <div class="card-body">${marked.parse(sec.content)}</div>
+      </div>`;
+    }
+  }
+  if (!html) html = `<div class="card"><div class="card-body md-content">${marked.parse(cleanContent)}</div></div>`;
+  return html;
+}
+
+// ── Risk Tab ──────────────────────────────────────────────────────────────────
+function renderRisk(content) {
+  const cleanContent = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+  const sections = parseSections(cleanContent);
+
+  let overall = '', risks = [], insights = [], sources = [];
+  for (const sec of sections) {
+    const h = sec.heading.toLowerCase();
+    if (h === 'risk assessment') {
+      overall = sec.content;
+    } else if (h === 'risk details') {
+      risks = parseRiskDetails(sec.content);
+    } else if (h === 'cross-workstream insights') {
+      insights = parseListItems(sec.content);
+    } else if (h.includes('data sources')) {
+      sources = parseListItems(sec.content);
+    } else if (h === 'risk matrix') {
+      risks = parseRiskMatrix(sec.content, risks);
+    }
+  }
+
+  let html = '';
+
+  // Overall rating banner
+  if (overall) {
+    const ratingM = overall.match(/Overall Risk Rating.*?(RED|AMBER|GREEN)/i);
+    const rating = ratingM ? ratingM[1].toUpperCase() : '';
+    const ratingColors = { RED: 'var(--error)', AMBER: 'var(--warning)', GREEN: 'var(--success)' };
+    const ratingBg = { RED: 'rgba(239,68,68,0.1)', AMBER: 'rgba(245,158,11,0.1)', GREEN: 'rgba(34,197,94,0.1)' };
+    if (rating) {
+      html += `<div class="card" style="border-color:${ratingColors[rating]}; background:${ratingBg[rating]}; text-align:center; padding:20px;">
+        <div style="font-size:28px; font-weight:800; color:${ratingColors[rating]};">${rating === 'RED' ? '🔴' : rating === 'AMBER' ? '🟡' : '🟢'} ${rating}</div>
+        <div style="color:var(--muted); font-size:14px; margin-top:4px;">Overall Risk Rating</div>
+      </div>`;
+    }
+  }
+
+  if (risks.length) {
+    for (const r of risks) {
+      html += renderRiskCard(r);
+    }
+  }
+
+  if (insights.length) {
+    html += `<div class="card">
+      <div class="card-title"><span class="dot"></span>Cross-Workstream Insights</div>
+      <div class="card-body"><ul>${insights.map(i => `<li>${escHtml(i)}</li>`).join('')}</ul></div>
+    </div>`;
+  }
+
+  if (sources.length) html += renderDataSources(sources);
+  if (!html) html = `<div class="card"><div class="card-body md-content">${marked.parse(cleanContent)}</div></div>`;
+  return html;
+}
+
+function parseRiskMatrix(matrixContent, existing) {
+  if (existing.length) return existing;
+  const risks = [];
+  const rows = matrixContent.split('\n').filter(l => l.includes('|') && !l.includes('Risk') && !l.match(/^[|\s-]+$/));
+  for (const row of rows) {
+    const cells = row.split('|').map(c => c.trim()).filter(Boolean);
+    if (cells.length >= 4) {
+      risks.push({ title: cells[0], category: cells[1], severity: cells[2], probability: cells[3], description: '', mitigants: [] });
+    }
+  }
+  return risks.length ? risks : existing;
+}
+
+function parseRiskDetails(content) {
+  const risks = [];
+  const re = /^####\s+(.+)$/gm;
+  let match, prev = null;
+  while ((match = re.exec(content)) !== null) {
+    if (prev) risks.push(parseOneRisk(prev.title, content.slice(prev.end, match.index).trim()));
+    prev = { title: match[1].trim(), end: match.index + match[0].length };
+  }
+  if (prev) risks.push(parseOneRisk(prev.title, content.slice(prev.end).trim()));
+  return risks;
+}
+
+function parseOneRisk(title, body) {
+  const catM = body.match(/\*\*Category:\*\*\s*([A-Z_]+)/i);
+  const sevM = body.match(/\*\*Severity:\*\*\s*(HIGH|MEDIUM|LOW)/i);
+  const probM = body.match(/\*\*Probability:\*\*\s*(HIGH|MEDIUM|LOW)/i);
+  const descM = body.match(/\*\*Description:\*\*\s*(.+?)(?:\n|$)/is);
+  const mitigants = [];
+  const mitSect = body.match(/\*\*Mitigants:\*\*[\s\S]*?((?:\s*-[^\n]+\n?)+)/i);
+  if (mitSect) {
+    for (const l of mitSect[1].split('\n')) {
+      const t = l.replace(/^\s*[-*]\s*/, '').trim();
+      if (t) mitigants.push(t);
+    }
+  }
+  return {
+    title,
+    category: catM ? catM[1] : '',
+    severity: sevM ? sevM[1] : '',
+    probability: probM ? probM[1] : '',
+    description: descM ? descM[1].trim() : '',
+    mitigants,
+  };
+}
+
+function renderRiskCard(r) {
+  const sevColor = { HIGH: 'var(--error)', MEDIUM: 'var(--warning)', LOW: 'var(--success)' };
+  return `<div class="risk-card">
+    <div class="risk-card-header">
+      <div class="risk-title">${escHtml(r.title)}</div>
+      <div class="risk-badges">
+        ${r.category ? `<span class="risk-badge cat">${escHtml(r.category)}</span>` : ''}
+        ${r.severity ? `<span class="risk-badge ${r.severity}" title="Severity">SEV: ${r.severity}</span>` : ''}
+        ${r.probability ? `<span class="risk-badge ${r.probability}" title="Probability">PROB: ${r.probability}</span>` : ''}
+      </div>
+    </div>
+    ${r.description ? `<div class="risk-desc">${escHtml(r.description)}</div>` : ''}
+    ${r.mitigants.length ? `<div class="risk-mitigants"><strong>Mitigants</strong><ul>${r.mitigants.map(m => `<li>${escHtml(m)}</li>`).join('')}</ul></div>` : ''}
+  </div>`;
+}
+
+// ── Deal Tab ──────────────────────────────────────────────────────────────────
+function renderDeal(content, title, confidence) {
+  const cleanContent = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+  const decision = manifest?.decision || extractDecision(cleanContent);
+  const sections = parseSections(cleanContent);
+
+  const CATEGORY_LABELS = {
+    'NEW_PRODUCTS': 'Expanding Product Portfolio',
+    'NEW_CUSTOMERS': 'New Customer Segments',
+    'ASSET_MONETIZATION': 'Asset Monetization',
+    'COST_SYNERGY': 'Cost Synergies',
+    'REVENUE_SYNERGY': 'Revenue Synergies',
+  };
+
+  const decisionLabels = { GO: '✅ GO', NO_GO: '❌ NO-GO', REVISIT: '⏳ REVISIT' };
+  const decisionCls = { GO: 'decision-GO', NO_GO: 'decision-NO_GO', REVISIT: 'decision-REVISIT' };
+  const scoreM = cleanContent.match(/Strategic Fit Score.*?([\d.]+)\s*\/\s*10/i);
+  const score = scoreM ? scoreM[1] : null;
+
+  let vcaSection = null, valSection = null, condSection = null, nextSection = null;
+  for (const sec of sections) {
+    const h = sec.heading.toLowerCase();
+    if (h.includes('value creation')) vcaSection = sec;
+    else if (h.includes('valuation')) valSection = sec;
+    else if (h.includes('condition') || h.includes('reversal')) condSection = sec;
+    else if (h.includes('next step')) nextSection = sec;
+  }
+
+  let html = `
+    <div class="agent-section">
+      <div class="agent-section-header">
+        <div class="agent-section-title">${escHtml(title)}</div>
+        ${confidence ? `<span class="confidence-badge">Confidence: ${escHtml(confidence)}</span>` : ''}
+      </div>`;
+
+  // 1. Value Creation Avenues
+  if (vcaSection) {
+    const vcas = parseVCAs(vcaSection.content);
+    const ICONS = { NEW_PRODUCTS: '🚀', NEW_CUSTOMERS: '👥', ASSET_MONETIZATION: '💎', COST_SYNERGY: '⚙️', REVENUE_SYNERGY: '📈' };
+    html += `<div class="card" style="margin-bottom:16px">
+      <div class="card-title"><span class="dot"></span>Value Creation Avenues</div>
+      <div>`;
+    if (vcas.length) {
+      for (const v of vcas) {
+        const label = CATEGORY_LABELS[v.category] || v.category;
+        html += `<div class="value-card">
+          <div class="value-card-icon">${ICONS[v.category] || '💡'}</div>
+          <div class="value-card-body">
+            <div class="value-card-title">${escHtml(label)}</div>
+            <div class="value-card-desc">${escHtml(v.description)}</div>
+            ${v.impact ? `<span class="value-card-impact impact-${v.impact}">${v.impact} Impact</span>` : ''}
+            ${v.requires_integration ? `<span class="value-card-impact" style="background:rgba(148,163,184,0.1);color:var(--muted);margin-left:6px">Requires Integration</span>` : ''}
+          </div>
+        </div>`;
+      }
+    } else {
+      html += `<div class="card-body md-content">${marked.parse(vcaSection.content)}</div>`;
+    }
+    html += '</div></div>';
+  }
+
+  // 2. Valuation
+  if (valSection) {
+    const low = extractValuationNum(valSection.content, 'low') || (manifest?.implied_valuation_range_usd_m?.low || 0);
+    const high = extractValuationNum(valSection.content, 'high') || (manifest?.implied_valuation_range_usd_m?.high || 0);
+    const evM = valSection.content.match(/EV\/EBITDA Range.*?(\d+\.?\d*)\s*(?:–|-|x)\s*(\d+\.?\d*)/i);
+    html += `<div class="valuation-card">
+      <div class="card-title" style="margin-bottom:12px"><span class="dot"></span>Valuation</div>`;
+    if (evM) html += `<div style="font-size:13px;color:var(--muted);margin-bottom:8px">EV/EBITDA Range: <strong>${evM[1]}x – ${evM[2]}x</strong></div>`;
+    if (high > 0) {
+      const pct = Math.min(90, Math.max(20, ((high - low) / high) * 100));
+      html += `<div style="font-size:13px;color:var(--muted);margin-bottom:6px">Implied Enterprise Value Range</div>
+        <div class="val-track"><div class="val-fill" style="width:${pct}%"></div></div>
+        <div class="val-range"><span>USD ${low.toLocaleString()}m</span><span>USD ${high.toLocaleString()}m</span></div>`;
+    } else {
+      html += `<div class="card-body md-content">${marked.parse(valSection.content)}</div>`;
+    }
+    html += '</div>';
+  }
+
+  // 3. Deal Decision
+  html += `<div class="decision-banner ${decisionCls[decision] || 'decision-REVISIT'}">
+    <div class="decision-label">${decisionLabels[decision] || decision}</div>
+    <div class="decision-sub">Strategic Fit Score: ${score ? score + '/10' : '—'}</div>
+  </div>`;
+
+  // 4. Conditions for Reversal
+  if (condSection) {
+    const items = parseListItems(condSection.content);
+    html += `<div class="steps-card">
+      <div class="card-title"><span class="dot"></span>Conditions for Reversal</div>
+      <ol>${items.map(i => `<li>${escHtml(i)}</li>`).join('')}</ol>
+    </div>`;
+  }
+
+  // 5. Next Steps
+  if (nextSection) {
+    const items = parseListItems(nextSection.content);
+    html += `<div class="steps-card">
+      <div class="card-title"><span class="dot"></span>Recommended Next Steps</div>
+      <ol>${items.map(i => `<li>${escHtml(i)}</li>`).join('')}</ol>
+    </div>`;
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function parseVCAs(content) {
+  const VCA_CATS = ['NEW_PRODUCTS','NEW_CUSTOMERS','ASSET_MONETIZATION','COST_SYNERGY','REVENUE_SYNERGY'];
+  const vcas = [];
+  for (const l of content.split('\n')) {
+    const catM = l.match(/\*\*([A-Z_]+)\*\*/);
+    const cat = catM ? catM[1] : null;
+    if (cat && VCA_CATS.includes(cat)) {
+      const desc = l.replace(/^\s*[-*]\s*/, '').replace(/\*\*[A-Z_]+\*\*\s*[🔼➡️⬇️🔽\s]*:\s*/, '').replace(/\s*_\(.*?\)_/, '').trim();
+      const impactM = l.match(/impact.*?(HIGH|MEDIUM|LOW)/i) || [];
+      const ri = l.includes('requires integration') || l.includes('_(requires');
+      vcas.push({ category: cat, description: desc, impact: impactM[1] || '', requires_integration: ri });
+    }
+  }
+  return vcas;
+}
+
+function extractDecision(content) {
+  const m = content.match(/Decision.*?[:\*]+\s*(GO|NO.GO|NO_GO|REVISIT)/i);
+  if (m) return m[1].toUpperCase().replace('-','_');
+  if (manifest?.decision) return manifest.decision;
+  return 'REVISIT';
+}
+
+function extractValuationNum(content, type) {
+  const m = content.match(/USD\s+([\d,]+(?:\.\d+)?)\s*m?\s*[–-]\s*USD\s+([\d,]+(?:\.\d+)?)\s*m/i);
+  if (m) {
+    const low = parseFloat(m[1].replace(/,/g,''));
+    const high = parseFloat(m[2].replace(/,/g,''));
+    return type === 'low' ? low : high;
+  }
+  return 0;
+}
+
+// ── Data Sources ──────────────────────────────────────────────────────────────
+function renderDataSources(sources) {
+  if (!sources.length) return '';
+  return `<div class="sources-card">
+    <div class="sources-title">📊 Data Sources</div>
+    <div class="sources-list">
+      ${sources.map(s => {
+        const url = s.replace(/^[-*]\s*/, '').trim();
+        const isUrl = url.startsWith('http');
+        return isUrl
+          ? `<a class="source-link" href="${escHtml(url)}" target="_blank" rel="noopener">${escHtml(url)}</a>`
+          : `<span class="source-link">${escHtml(url)}</span>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+// ── Chart Init ────────────────────────────────────────────────────────────────
+function initChartsInPane(pane, items, tabType) {
+  const chartEls = pane.querySelectorAll('[data-chart-type]');
+  chartEls.forEach(el => {
+    const type = el.getAttribute('data-chart-type');
+    const section = el.getAttribute('data-chart-section');
+    const data = el.getAttribute('data-chart-data');
+    const canvasId = el.querySelector('canvas')?.id;
+    if (!canvasId) return;
+
+    if (type === 'pie') {
+      const { labels, values } = parsePlayerShares(data);
+      if (!labels.length) return;
+      initPieChart(canvasId, labels, values, section);
+    } else {
+      const series = parseYearValues(data);
+      if (!series.length) return;
+      const isBar = type === 'bar';
+      initLineChart(canvasId, series, section, isBar);
+      setChartSummary(el, section, series);
+    }
+  });
+}
+
+const CHART_COLORS = ['#14b8a6','#6366f1','#f59e0b','#22c55e','#ef4444','#8b5cf6','#ec4899'];
+
+function initLineChart(canvasId, series, label, isBar) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (chartRegistry[canvasId]) chartRegistry[canvasId].destroy();
+  const ctx = canvas.getContext('2d');
+  chartRegistry[canvasId] = new Chart(ctx, {
+    type: isBar ? 'bar' : 'line',
+    data: {
+      labels: series.map(d => d.year),
+      datasets: [{
+        label,
+        data: series.map(d => d.value),
+        borderColor: '#14b8a6',
+        backgroundColor: isBar ? 'rgba(20,184,166,0.5)' : 'rgba(20,184,166,0.1)',
+        borderWidth: 2,
+        pointBackgroundColor: '#14b8a6',
+        tension: 0.4,
+        fill: !isBar,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(51,65,85,0.5)' }, ticks: { color: '#94a3b8' } },
+        y: { grid: { color: 'rgba(51,65,85,0.5)' }, ticks: { color: '#94a3b8' } },
+      }
+    }
+  });
+}
+
+function initPieChart(canvasId, labels, values, label) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (chartRegistry[canvasId]) chartRegistry[canvasId].destroy();
+  const ctx = canvas.getContext('2d');
+  chartRegistry[canvasId] = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: CHART_COLORS.slice(0, labels.length),
+        borderWidth: 1,
+        borderColor: '#1e293b',
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 12 } } },
+      }
+    }
+  });
+}
+
+function setChartSummary(el, section, series) {
+  const summEl = el.querySelector('.chart-summary');
+  if (!summEl || series.length < 2) return;
+  const first = series[0].value, last = series[series.length-1].value;
+  const change = ((last - first) / Math.abs(first) * 100).toFixed(1);
+  const dir = change > 0 ? 'increased' : 'decreased';
+  summEl.textContent = `${section.replace(' (5-Year)','').replace(' (5-Year:','').split(':')[0]} ${dir} by ${Math.abs(change)}% from ${series[0].year} to ${series[series.length-1].year}.`;
+}
+
+// ── Tab Navigation ────────────────────────────────────────────────────────────
+function renderTabNav(tabIdx) {
+  const total = TAB_DEFS.length;
+  const hasPrev = tabIdx > 0;
+  const hasNext = tabIdx < total - 1;
+  const prev = hasPrev ? TAB_DEFS[tabIdx-1].label : '';
+  const next = hasNext ? TAB_DEFS[tabIdx+1].label : '';
+  return `<div class="tab-nav">
+    <button class="tab-nav-btn" ${hasPrev ? `onclick="activateTab(${tabIdx-1})"` : 'disabled'}>← ${hasPrev ? escHtml(prev) : ''}</button>
+    <span class="tab-nav-center">${tabIdx+1} / ${total}</span>
+    <button class="tab-nav-btn" ${hasNext ? `onclick="activateTab(${tabIdx+1})"` : 'disabled'}>${hasNext ? escHtml(next) : ''} →</button>
+  </div>`;
+}
+
+function activateTab(tabIdx) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
+  const tabDef = TAB_DEFS[tabIdx];
+  if (!tabDef) return;
   const btn = document.getElementById(tabDef.id + '-btn');
   const pane = document.getElementById(tabDef.id + '-pane');
   if (btn) btn.classList.add('active');
   if (pane) pane.classList.add('active');
 }
 
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  if (typeof s !== 'string') s = String(s || '');
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function slugify(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+}
+
 function resetToInput() {
-  clearInterval(pollTimer);
-  currentAssessmentId = null; renderedTabs = new Set(); tabContents = {}; agentStartTimes = {}; manifest = null;
+  clearInterval(pollTimer); clearInterval(timerInterval);
+  currentAssessmentId = null; renderedAgents = new Set(); tabContents = {};
+  agentStartTimes = {}; agentEndTimes = {}; manifest = null;
+  Object.values(chartRegistry).forEach(c => { try { c.destroy(); } catch(e){} });
+  chartRegistry = {};
   document.getElementById('tabs-bar').innerHTML = '';
   document.getElementById('tabs-content').innerHTML = '';
   document.getElementById('buyer-input').value = '';
@@ -528,14 +1202,6 @@ function resetToInput() {
   btn.disabled = false; btn.textContent = 'Start Assessment';
   hide('pipeline-section'); hide('results-section'); show('input-section');
 }
-
-// Radio button styling
-document.querySelectorAll('input[name="assessment_type"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    document.querySelectorAll('.radio-option').forEach(opt => opt.classList.remove('selected'));
-    radio.parentElement.classList.add('selected');
-  });
-});
 </script>
 </body>
 </html>

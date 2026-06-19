@@ -1,0 +1,54 @@
+{
+  "assessment_id": "8483e406-af1c-4192-8878-b877ef4b69bc",
+  "buyer_company": "micron",
+  "target_company": "seagate",
+  "assessment_type": "LEVEL_2",
+  "started_at": "2026-06-18T23:16:15.924091Z",
+  "phase": "COMPLETE",
+  "completed_agents": {
+    "buyer-country-agent": {
+      "completed_at": "2026-06-18T23:17:34.844856Z"
+    },
+    "sector-agent": {
+      "completed_at": "2026-06-18T23:17:55.269544Z"
+    },
+    "buyer-company-agent": {
+      "completed_at": "2026-06-18T23:18:08.757953Z"
+    },
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-18T23:18:13.995525Z"
+    },
+    "company-agent": {
+      "completed_at": "2026-06-18T23:18:32.773629Z"
+    },
+    "country-agent": {
+      "completed_at": "2026-06-18T23:19:13.751072Z"
+    },
+    "risk-agent": {
+      "completed_at": "2026-06-18T23:20:36.150207Z"
+    },
+    "deal-rationale-agent": {
+      "completed_at": "2026-06-18T23:21:45.117520Z"
+    }
+  },
+  "overall_status": "NEEDS_HUMAN_REVIEW",
+  "target_country": "USA",
+  "target_sector": "Data Storage",
+  "buyer_country": "USA",
+  "buyer_sector": "Semiconductors",
+  "room_id": "377d8ab2-9503-4ca2-90bf-45d485b8a067",
+  "band_room_url": "https://app.band.ai/chat/377d8ab2-9503-4ca2-90bf-45d485b8a067",
+  "completed_at": "2026-06-18T23:21:45.117503Z",
+  "decision": "NO_GO",
+  "strategic_fit_score": 3.5,
+  "implied_valuation_range_usd_m": {
+    "low": 11000.0,
+    "high": 22000.0
+  },
+  "ev_ebitda_comparable_range": {
+    "low": 5.5,
+    "high": 8.5,
+    "median": 7.0
+  },
+  "overall_risk_rating": "RED"
+}

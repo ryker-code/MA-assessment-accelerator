@@ -1,82 +1,89 @@
 # M&A Assessment Accelerator
 
-A multi-agent system that compresses M&A target due diligence from 2 weeks to 2-4 hours. Given a buyer and target company, nine specialized AI agents collaborate through Band to produce a structured Go/No-Go investment recommendation covering country risk, sector dynamics, company financials, cross-workstream risk synthesis, and deal valuation.
+> **Band of Agents Hackathon 2026** — Track 3: Regulated & High-Stakes Workflows
 
-Built for the Band of Agents Hackathon (June 2026), the system demonstrates how agent-to-agent coordination via Band's @mention routing enables parallel research workflows that would otherwise require sequential analyst handoffs.
+A multi-agent AI system that compresses a 2-week M&A target assessment into **2–4 hours**. Nine specialized agents coordinate through [Band](https://band.ai) to produce a structured Go/No-Go investment recommendation.
 
-## Architecture
+## Live Demo
+🔗 **[Try it live →](YOUR_DEPLOYED_URL)**
 
-```
-                        ┌─────────────────────────────────────────┐
-                        │           @coordinator                   │
-                        │   Orchestrates all 9 agents via Band    │
-                        └──────────────┬──────────────────────────┘
-                                       │ @mentions (parallel)
-              ┌────────────────────────┼──────────────────────────────────┐
-              │                        │                                  │
-     SELL-SIDE (target)        SELL-SIDE (target)              BUY-SIDE (acquirer)
-   ┌──────────────────┐     ┌──────────────────┐          ┌───────────────────────┐
-   │ @country-agent   │     │ @company-agent   │          │ @buyer-country-agent  │
-   │ @sector-agent    │     │ (financials,     │          │ @buyer-sector-agent   │
-   │ (macro, policy,  │     │  management,     │          │ @buyer-company-agent  │
-   │  FX, regulations)│     │  shareholders)   │          │ (capacity, strategy,  │
-   └──────────────────┘     └──────────────────┘          │  M&A track record)    │
-                                                           └───────────────────────┘
-                                       │ (Phase 2)
-                              ┌────────────────┐
-                              │  @risk-agent   │
-                              │ Cross-workstream│
-                              │ risk synthesis │
-                              └───────┬────────┘
-                                      │ (Phase 3)
-                              ┌────────────────────┐
-                              │ @deal-rationale-   │
-                              │ agent              │
-                              │ Go/No-Go + valuation│
-                              └────────────────────┘
-```
+## What It Does
+Enter an acquirer and a target company. Nine AI agents run in parallel and sequentially to produce:
+- Country risk profiles (buy-side + sell-side)
+- Sector/competitive landscape (buy-side + sell-side)  
+- Company financial profiles (buy-side + sell-side)
+- Cross-workstream risk synthesis
+- Deal rationale with Go/No-Go recommendation + valuation range
 
-## Prerequisites
+Each agent saves its output as a structured Markdown file. The dashboard shows results in real-time as agents complete.
 
-- Python 3.11+
-- Band account with 9 registered agents
-- API keys: Google AI Studio, Featherless AI, Tavily, Band SDK
+## Agent Architecture
 
-## Setup
+@coordinator (Gemini)
+├── PHASE 1 (Parallel)
+│ ├── @country-agent ← Sell-side country/macro
+│ ├── @sector-agent ← Sell-side sector dynamics
+│ ├── @company-agent ← Sell-side financials (Gemini vision)
+│ ├── @buyer-country-agent ← Buy-side home market
+│ ├── @buyer-sector-agent ← Buy-side competitive position
+│ └── @buyer-company-agent ← Buy-side financial capacity
+├── PHASE 2 (Sequential)
+│ └── @risk-agent ← Cross-workstream synthesis (DeepSeek-R1)
+└── PHASE 3
+└── @deal-rationale-agent ← Go/No-Go + valuation (Gemini)
+
+
+## Tech Stack
+| Component | Technology |
+|---|---|
+| Agent Coordination | [Band](https://band.ai) @mention routing |
+| Orchestration | Gemma 4 31B IT (Google AI Studio) |
+| Research Agents | Qwen3-14B (Featherless AI) |
+| Risk Reasoning | DeepSeek-R1 (Featherless AI) |
+| Backend | FastAPI (Python) |
+| Frontend | HTML/CSS/JS with SSE streaming |
+| Caching | Disk-based SHA256 response cache |
+| Output | Per-agent Markdown files in `/output` |
+
+## Quickstart
 
 ```bash
-# 1. Clone and install
-git clone https://github.com/ryker-code/MA-assessment-accelerator
+git clone https://github.com/YOUR_USERNAME/MA-assessment-accelerator
 cd MA-assessment-accelerator
+cp .env.example .env   # Add your API keys
 pip install -r requirements.txt
-
-# 2. Configure environment
-cp .env.example .env
-# Edit .env with your API keys
-
-# 3. Verify setup
-python -c "import openai, yaml; print('deps OK')"
+uvicorn api.main:app --reload --port 8000
 ```
 
-## Running the Demo
+Open `http://localhost:8000`
 
-```bash
-# Terminal 1: Start the API server
-uvicorn api.server:app --port 8000 --reload
+## API Keys Required
+GOOGLE_API_KEY= # Google AI Studio (free, 1500 req/day)
+BAND_API_KEY= # Band Pro
+FEATHERLESS_API_KEY= # Featherless Premium
+AIML_API_KEY= # AI/ML API (optional, swap via config/models.yaml)
 
-# Terminal 2: Run the demo (stc acquiring Telenor Pakistan)
-python demo/run_demo.py
 
-# Open the dashboard
-open http://localhost:8000
-```
+## Example Assessment
+**Acquirer**: T-Mobile  
+**Target**: Telesat  
+→ Produces 9 agent reports + executive Go/No-Go memo in ~3-4 minutes
 
-## Hackathon Track
+## Project Structure
+├── agents/ # 9 Band-connected agent modules
+│ └── shared/ # LLMRouter, caching, Band client
+├── api/ # FastAPI backend with SSE streaming
+├── web/ # Dashboard frontend
+├── config/ # models.yaml — swap any model in one line
+├── output/ # Per-assessment Markdown outputs
+└── demo/ # Pre-cached demo scenarios
 
-**Band of Agents** — demonstrating multi-agent coordination via @mention routing.
 
-**Judging criteria alignment:**
-- **Band integration**: All 9 agents communicate exclusively through Band @mentions
-- **Multi-agent**: Parallel Phase 1 (6 agents) → Sequential Phase 2-3 synthesis
-- **Real-world utility**: M&A due diligence is a documented 2-week process compressed to hours
-- **Cross-workstream insight**: Risk agent surfaces risks only visible by combining buy+sell data
+## Hackathon
+Built for the **Band of Agents Hackathon** (June 2026) in 35 hours.  
+Demonstrates meaningful multi-agent coordination where Band's @mention routing enables parallel research workflows impossible with single-agent systems.
+
+## License
+MIT
+ENDOFREADME
+echo "README updated"

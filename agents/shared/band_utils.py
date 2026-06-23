@@ -16,15 +16,19 @@ BAND_REST_URL = os.environ.get("BAND_REST_URL", "https://app.band.ai/")
 
 # Map agent short-names → agent_config.yaml keys and Band handles
 _AGENT_META = {
-    "coordinator":          {"cfg": "coordinator",         "handle": "m-a-coordinator"},
-    "country-agent":        {"cfg": "country_agent",       "handle": "country-agent"},
-    "sector-agent":         {"cfg": "sector_agent",        "handle": "sector-agent"},
-    "company-agent":        {"cfg": "company_agent",       "handle": "company-agent"},
-    "buyer-country-agent":  {"cfg": "buyer_country_agent", "handle": "buyer-country-agent"},
-    "buyer-sector-agent":   {"cfg": "buyer_sector_agent",  "handle": "buyer-sector-agent"},
-    "buyer-company-agent":  {"cfg": "buyer_company_agent", "handle": "buyer-company-agent"},
-    "risk-agent":           {"cfg": "risk_agent",          "handle": "risk-agent"},
-    "deal-rationale-agent": {"cfg": "deal_rationale_agent","handle": "deal-rationale-agent"},
+    "coordinator":            {"cfg": "coordinator",         "handle": "m-a-coordinator"},
+    "seller-country-agent":   {"cfg": "country_agent",       "handle": "seller-country-agent"},
+    "seller-sector-agent":    {"cfg": "sector_agent",        "handle": "seller-sector-agent"},
+    "seller-company-agent":   {"cfg": "company_agent",       "handle": "seller-company-agent"},
+    "buyer-country-agent":    {"cfg": "buyer_country_agent", "handle": "buyer-country-agent"},
+    "buyer-sector-agent":     {"cfg": "buyer_sector_agent",  "handle": "buyer-sector-agent"},
+    "buyer-company-agent":    {"cfg": "buyer_company_agent", "handle": "buyer-company-agent"},
+    "risk-agent":             {"cfg": "risk_agent",          "handle": "risk-agent"},
+    "deal-rationale-agent":   {"cfg": "deal_rationale_agent","handle": "deal-rationale-agent"},
+    # Legacy aliases — used by old assessments and handle_message paths
+    "country-agent":          {"cfg": "country_agent",       "handle": "seller-country-agent"},
+    "sector-agent":           {"cfg": "sector_agent",        "handle": "seller-sector-agent"},
+    "company-agent":          {"cfg": "company_agent",       "handle": "seller-company-agent"},
 }
 
 _configs: dict = {}

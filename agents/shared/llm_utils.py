@@ -4,17 +4,21 @@ import re
 def extract_json(response: str) -> str:
     """Extract the first top-level JSON object from an LLM response.
 
-    Handles: <think>...</think> blocks, markdown fences, and bare JSON.
+    Handles: <think>...</think> blocks, markdown fences, grounding citations,
+    and bare JSON.
     """
     # Strip <think>...</think> blocks (DeepSeek-R1, Qwen3, etc.)
     text = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL).strip()
 
-    # Try markdown fenced JSON first
-    fence_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
-    if fence_match:
-        return fence_match.group(1)
+    # Strip any opening and closing markdown fence lines so brace-matching works
+    # cleanly on the remaining text regardless of what appears after the fence.
+    text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.MULTILINE)
+    text = re.sub(r"^```\s*$", "", text, flags=re.MULTILINE)
+    text = text.strip()
 
-    # Find the outermost { ... }
+    # Find and extract the outermost { ... } via brace-matching.
+    # This is more robust than a single regex because it handles nested objects,
+    # escaped characters, and any trailing content (grounding citations, etc.).
     start = text.find("{")
     if start == -1:
         return text
@@ -39,6 +43,6 @@ def extract_json(response: str) -> str:
         elif ch == "}":
             depth -= 1
             if depth == 0:
-                return text[start : i + 1]
+                return text[start: i + 1]
 
     return text[start:]

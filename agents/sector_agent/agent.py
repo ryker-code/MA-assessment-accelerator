@@ -59,11 +59,11 @@ def _format_markdown(data: SectorAssessment) -> str:
 
 async def run_sector_assessment(assessment_id: str, company: str, sector: str, country: str) -> dict:
     searches = [
-        f"{sector} {country} market size revenue 2024 2025",
-        f"{sector} {country} major players market share competition",
-        f"{sector} {country} regulatory environment compliance requirements",
-        f"{sector} technology disruption trends 2024 2025",
-        f"{sector} {country} M&A deals consolidation recent",
+        f"{sector} {country} market size revenue 2024 2025 2026",
+        f"{sector} {country} major players market share competition 2025",
+        f"{sector} {country} regulatory environment compliance requirements 2025",
+        f"{sector} technology disruption trends 2025 2026",
+        f"{sector} {country} M&A deals consolidation 2024 2025 2026",
     ]
     research_data = []
     for q in searches:
@@ -85,7 +85,7 @@ async def run_sector_assessment(assessment_id: str, company: str, sector: str, c
         f"Research data:\n{context}\n\n"
         "Produce a sector assessment as a single JSON object with EXACTLY this structure:\n"
         "{\n"
-        f'  "agent": "sector-agent",\n'
+        f'  "agent": "seller-sector-agent",\n'
         f'  "assessment_id": "{assessment_id}",\n'
         f'  "target_company": "{company}",\n'
         '  "buyer_company": "",\n'
@@ -97,7 +97,7 @@ async def run_sector_assessment(assessment_id: str, company: str, sector: str, c
         f'  "sector": "{sector}",\n'
         f'  "country": "{country}",\n'
         '  "market_size_usd_bn": 5.0,\n'
-        '  "market_size_5yr": [{"year": 2020, "value": 3.5, "unit": "USD bn"}, {"year": 2021, "value": 3.9, "unit": "USD bn"}, {"year": 2022, "value": 4.2, "unit": "USD bn"}, {"year": 2023, "value": 4.6, "unit": "USD bn"}, {"year": 2024, "value": 5.0, "unit": "USD bn"}],\n'
+        '  "market_size_5yr": [{"year": 2021, "value": 3.9, "unit": "USD bn"}, {"year": 2022, "value": 4.2, "unit": "USD bn"}, {"year": 2023, "value": 4.6, "unit": "USD bn"}, {"year": 2024, "value": 5.0, "unit": "USD bn"}, {"year": 2025, "value": 5.5, "unit": "USD bn"}, {"year": 2026, "value": 6.0, "unit": "USD bn"}],\n'
         '  "top_players_market_share": {"Player A": 25.0, "Player B": 20.0, "Player C": 15.0, "Others": 40.0},\n'
         '  "market_growth_rate_pct": 4.5,\n'
         '  "num_major_players": 5,\n'
@@ -105,13 +105,17 @@ async def run_sector_assessment(assessment_id: str, company: str, sector: str, c
         '  "regulatory_risk": "MEDIUM",\n'
         '  "key_regulations": ["Regulation 1", "Regulation 2"],\n'
         '  "technology_disruption_risk": "MEDIUM",\n'
-        '  "sector_specific_kpis": {"ARPU_USD": 5.0, "churn_rate_pct": 2.5},\n'
+        '  "sector_specific_kpis": {"REPLACE_WITH_SECTOR_RELEVANT_KPIS": "see instructions above"},\n'
         '  "risk_flags": ["Risk 1"],\n'
         '  "narrative_summary": "2-3 paragraph narrative here."\n'
         "}\n\n"
+        f"CRITICAL: sector_specific_kpis must contain 4-6 KPIs most relevant to the {sector} sector. "
+        "For telecom: use mobile_subscribers_m, broadband_coverage_pct, mobile_penetration_pct, ARPU_USD, churn_rate_pct. "
+        "For tower/passive infra: use tenancy_ratio, number_of_towers, revenue_per_site_usd_monthly, site_uptime_pct. "
+        "For cloud/AI: use infrastructure_utilization_rate_pct, gpu_utilization_pct, uptime_pct, compute_cost_per_hour_usd. "
         "Rules: regulatory_risk and technology_disruption_risk must be HIGH, MEDIUM, or LOW. "
         "status must be COMPLETE, PARTIAL, or NEEDS_HUMAN_REVIEW. "
-        "market_size_5yr: 5 years of market size data in USD bn. "
+        "market_size_5yr: 6 years (2021-2026) of market size data in USD bn. "
         "top_players_market_share: dict of {player_name: market_share_pct} including 'Others'. "
         "Return ONLY the JSON object, no other text."
     )
@@ -128,7 +132,7 @@ async def run_sector_assessment(assessment_id: str, company: str, sector: str, c
         structured = SectorAssessment.model_validate_json(json_str)
     except Exception:
         structured = SectorAssessment(
-            agent="sector-agent",
+            agent="seller-sector-agent",
             assessment_id=assessment_id,
             target_company=company,
             buyer_company="",
@@ -171,7 +175,7 @@ async def handle_message(message: dict):
 
     file_path = save_agent_output(
         assessment_id=assessment_id,
-        agent_name="sector-agent",
+        agent_name="seller-sector-agent",
         file_index=2,
         title=f"Sector Assessment: {sector} ({country})",
         content=result["markdown"],
@@ -180,7 +184,7 @@ async def handle_message(message: dict):
 
     await post_completion(
         room_id=params.get("room_id", ""),
-        agent_name="sector-agent",
+        agent_name="seller-sector-agent",
         output_schema=result["structured"],
         file_path=file_path,
     )

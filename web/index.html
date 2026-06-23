@@ -4,353 +4,546 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>M&A Assessment Accelerator</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --surface3: #475569;
-      --text: #f8fafc; --muted: #94a3b8; --accent: #14b8a6;
-      --success: #22c55e; --warning: #f59e0b; --error: #ef4444; --border: #334155;
+      --bg:        #ede9f8;
+      --card:      #ffffff;
+      --purple:    #7c3aed;
+      --purple-lt: #ede9f8;
+      --purple-md: #a78bfa;
+      --gold:      #f59e0b;
+      --gold-lt:   #fef3c7;
+      --success:   #10b981;
+      --warning:   #f59e0b;
+      --error:     #ef4444;
+      --text:      #1e1b4b;
+      --muted:     #6b7280;
+      --border:    rgba(124,58,237,0.10);
+      --shadow:    0 2px 16px rgba(107,78,200,0.10);
+      --radius:    16px;
+      --sidebar-w: 68px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
 
-    /* ── Header ── */
-    header {
-      background: var(--surface); border-bottom: 1px solid var(--border);
-      padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w); background: var(--card); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center; padding: 20px 0;
+      position: fixed; top: 0; left: 0; height: 100vh; z-index: 100;
+      box-shadow: 2px 0 12px rgba(107,78,200,0.06);
     }
-    .logo { display: flex; align-items: center; gap: 12px; }
-    .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
-    .logo-text { font-size: 18px; font-weight: 600; }
-    .band-link { color: var(--accent); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px; }
-    .band-link:hover { text-decoration: underline; }
-
-    main { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
-
-    /* ── Input Section ── */
-    #input-section { max-width: 560px; margin: 0 auto; }
-    .section-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
-    .section-sub { color: var(--muted); margin-bottom: 32px; font-size: 14px; }
-    .form-group { margin-bottom: 20px; }
-    label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
-    input[type="text"] {
-      width: 100%; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border);
-      border-radius: 8px; color: var(--text); font-size: 15px; font-family: inherit;
-      outline: none; transition: border-color 0.2s;
+    .sidebar-logo {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--purple), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 13px; color: white; margin-bottom: 32px; flex-shrink: 0;
     }
-    input[type="text"]:focus { border-color: var(--accent); }
-    .btn-primary {
-      width: 100%; padding: 14px; background: var(--accent); color: white;
-      border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
-      cursor: pointer; transition: opacity 0.2s; font-family: inherit; margin-top: 8px;
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .sidebar-icon {
+      width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center;
+      justify-content: center; cursor: pointer; font-size: 20px; color: var(--muted);
+      transition: all 0.2s;
     }
-    .btn-primary:hover { opacity: 0.9; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .sidebar-icon.active { background: var(--purple); color: white; box-shadow: 0 4px 12px rgba(124,58,237,0.35); }
+    .sidebar-icon:hover:not(.active) { background: var(--purple-lt); color: var(--purple); }
 
-    /* ── Pipeline ── */
-    #pipeline-section { display: none; }
-    .assessment-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
-    .assessment-title { font-size: 20px; font-weight: 600; }
-    .assessment-meta { color: var(--muted); font-size: 13px; margin-top: 4px; }
-    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
-    .status-IN_PROGRESS { background: rgba(245,158,11,0.15); color: var(--warning); }
-    .status-COMPLETE { background: rgba(34,197,94,0.15); color: var(--success); }
-    .status-NEEDS_HUMAN_REVIEW { background: rgba(239,68,68,0.15); color: var(--error); }
+    /* ── Main ── */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
-    .row-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; margin-top: 16px; }
-    .row-label:first-child { margin-top: 0; }
-    .pipeline-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 4px; }
-
-    .agent-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px 16px; transition: all 0.3s;
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 0 28px; height: 64px; display: flex; align-items: center;
+      justify-content: space-between; position: sticky; top: 0; z-index: 90;
+      flex-shrink: 0;
     }
-    .agent-card.running { border-color: var(--accent); animation: pulse-border 2s infinite; }
-    .agent-card.complete { border-color: var(--success); background: rgba(34,197,94,0.05); }
-    .agent-card.error { border-color: var(--error); }
-    @keyframes pulse-border {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(20,184,166,0.3); }
-      50% { box-shadow: 0 0 0 4px rgba(20,184,166,0.1); }
-    }
-    .agent-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-    .agent-role { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
-    .agent-footer { display: flex; align-items: center; justify-content: space-between; }
-    .agent-status-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-    .badge-WAITING { background: var(--surface2); color: var(--muted); }
-    .badge-RUNNING { background: rgba(20,184,166,0.2); color: var(--accent); }
-    .badge-COMPLETE { background: rgba(34,197,94,0.2); color: var(--success); }
-    .badge-ERROR { background: rgba(239,68,68,0.2); color: var(--error); }
-    .agent-timer { font-size: 12px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
-    .agent-timer.running { color: var(--accent); }
-    .agent-timer.complete { color: var(--success); }
+    .user-pill { display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; background: var(--purple-lt); border-radius: 40px; cursor: pointer; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--purple-md)); display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+    .user-name { font-size: 14px; font-weight: 600; }
+    .topbar-center { font-size: 14px; font-weight: 600; color: var(--text); display: none; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .search-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; color: var(--muted); }
+    .icon-btn { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--bg); border: 1px solid var(--border); cursor: pointer; }
 
-    /* ── Results / Tabs ── */
-    #results-section { display: none; }
-    #new-assessment-btn, #new-assessment-btn2 {
-      padding: 10px 20px; background: var(--surface); border: 1px solid var(--border);
-      color: var(--text); border-radius: 8px; cursor: pointer; font-size: 14px; font-family: inherit; margin-bottom: 24px;
-    }
-    #new-assessment-btn:hover, #new-assessment-btn2:hover { border-color: var(--accent); }
+    /* ── Pages ── */
+    .page { display: none; padding: 28px; flex: 1; }
+    .page.active { display: block; }
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+    .page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
 
-    .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 28px; overflow-x: auto; }
-    .tab {
-      padding: 11px 20px; font-size: 13px; font-weight: 500; color: var(--muted);
-      border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent;
-      white-space: nowrap; transition: all 0.2s; font-family: inherit;
-    }
-    .tab:hover { color: var(--text); }
-    .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+    /* ── Buttons ── */
+    .btn-gold { padding: 10px 22px; background: var(--gold); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(245,158,11,0.3); transition: opacity 0.2s; }
+    .btn-gold:hover { opacity: 0.92; }
+    .btn-gold:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-outline { padding: 9px 16px; background: white; color: var(--text); border: 1px solid var(--border); border-radius: 12px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+    .btn-outline:hover { border-color: var(--purple); color: var(--purple); }
 
     /* ── Card ── */
-    .card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-      padding: 20px 24px; margin-bottom: 16px;
-    }
-    .card-title {
-      font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase;
-      letter-spacing: 0.07em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
-    }
-    .card-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-    .card-body { font-size: 14px; line-height: 1.7; }
+    .card { background: var(--card); border-radius: var(--radius); padding: 22px 24px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 16px; }
+    .card-sm { padding: 16px 18px; }
+    .card-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .card-title-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); flex-shrink: 0; }
+    .card-body { font-size: 14px; line-height: 1.7; color: var(--muted); }
     .card-body p { margin-bottom: 8px; }
-    .card-body ul { padding-left: 18px; }
+    .card-body ul, .card-body ol { padding-left: 18px; margin-bottom: 10px; }
     .card-body li { margin-bottom: 4px; }
+    .card-body strong { color: var(--text); }
+    .card-body table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 13px; }
+    .card-body th { background: var(--bg); padding: 8px 12px; text-align: right; border: 1px solid var(--border); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .card-body th:first-child { text-align: left; }
+    .card-body td { padding: 8px 12px; border: 1px solid var(--border); text-align: right; color: var(--muted); }
+    .card-body td:first-child { font-weight: 600; color: var(--text); text-align: left; }
 
-    /* ── Section header (agent block) ── */
-    .agent-section { margin-bottom: 32px; }
-    .agent-section-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
-    }
-    .agent-section-title { font-size: 18px; font-weight: 700; }
-    .confidence-badge {
-      background: rgba(20,184,166,0.12); border: 1px solid rgba(20,184,166,0.3);
-      color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
-    }
-    .section-divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+    /* ── Grid ── */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+    .g-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+    .span2 { grid-column: span 2; }
 
-    /* ── Charts ── */
-    .chart-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-      padding: 20px 24px; margin-bottom: 16px;
-    }
-    .chart-card-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
-    .chart-summary { font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
-    .chart-wrap { position: relative; height: 200px; }
+    /* ── Badges ── */
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .b-purple { background: rgba(124,58,237,0.12); color: var(--purple); }
+    .b-gold   { background: var(--gold-lt); color: #92400e; }
+    .b-green  { background: rgba(16,185,129,0.12); color: var(--success); }
+    .b-red    { background: rgba(239,68,68,0.12); color: var(--error); }
+    .b-gray   { background: #f3f4f6; color: var(--muted); }
 
-    /* ── Risk Cards ── */
-    .risk-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; }
-    .risk-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
-    .risk-title { font-size: 15px; font-weight: 700; }
-    .risk-badges { display: flex; gap: 6px; flex-wrap: wrap; }
-    .risk-badge { padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-    .risk-badge.HIGH { background: rgba(239,68,68,0.2); color: var(--error); }
-    .risk-badge.MEDIUM { background: rgba(245,158,11,0.2); color: var(--warning); }
-    .risk-badge.LOW { background: rgba(34,197,94,0.2); color: var(--success); }
-    .risk-badge.cat { background: var(--surface2); color: var(--muted); }
-    .risk-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
-    .risk-mitigants { font-size: 13px; }
-    .risk-mitigants strong { color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .risk-mitigants ul { padding-left: 16px; margin-top: 4px; }
-    .risk-mitigants li { margin-bottom: 3px; color: var(--muted); }
+    /* ── Section header ── */
+    .section-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-title { font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .section-divider { border: none; border-top: 2px solid var(--border); margin: 32px 0; }
+    .conf-pill { display: flex; align-items: center; gap: 6px; padding: 5px 14px; background: var(--purple-lt); border-radius: 20px; color: var(--purple); font-size: 12px; font-weight: 700; border: 1px solid rgba(124,58,237,0.2); flex-shrink: 0; }
 
-    /* ── Deal Tab ── */
-    .decision-banner {
-      padding: 28px; border-radius: 14px; text-align: center; margin-bottom: 20px;
-    }
-    .decision-GO { background: rgba(34,197,94,0.1); border: 2px solid rgba(34,197,94,0.4); }
-    .decision-NO_GO { background: rgba(239,68,68,0.1); border: 2px solid rgba(239,68,68,0.4); }
-    .decision-REVISIT { background: rgba(245,158,11,0.1); border: 2px solid rgba(245,158,11,0.4); }
-    .decision-label { font-size: 40px; font-weight: 800; letter-spacing: 0.04em; }
-    .decision-GO .decision-label { color: var(--success); }
-    .decision-NO_GO .decision-label { color: var(--error); }
-    .decision-REVISIT .decision-label { color: var(--warning); }
-    .decision-sub { font-size: 14px; color: var(--muted); margin-top: 6px; }
+    /* ── Chart card ── */
+    .chart-card { background: var(--card); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 16px; }
+    .chart-card-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+    .chart-card-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+    .chart-wrap { position: relative; height: 180px; }
+    .chart-wrap-lg { position: relative; height: 200px; }
+    .pie-wrap { position: relative; height: 220px; }
 
-    .value-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; display: flex; gap: 14px; align-items: flex-start; }
-    .value-card-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
-    .value-card-body { flex: 1; }
-    .value-card-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-    .value-card-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
-    .value-card-impact { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
-    .impact-HIGH { background: rgba(34,197,94,0.15); color: var(--success); }
-    .impact-MEDIUM { background: rgba(245,158,11,0.15); color: var(--warning); }
-    .impact-LOW { background: rgba(148,163,184,0.15); color: var(--muted); }
+    /* ── Summary metrics row ── */
+    .metrics-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+    .metric { background: var(--card); border-radius: 14px; padding: 18px 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .metric-lbl { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+    .metric-val { font-size: 22px; font-weight: 800; }
+    .metric-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
 
-    .valuation-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
-    .val-track { height: 20px; background: var(--surface2); border-radius: 10px; position: relative; margin: 10px 0; }
-    .val-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--accent), var(--success)); min-width: 20px; }
-    .val-range { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+    /* ── Tabs ── */
+    .tabs-wrap { display: flex; gap: 4px; margin-bottom: 24px; background: var(--card); padding: 5px; border-radius: 14px; box-shadow: var(--shadow); width: fit-content; }
+    .tab-pill { padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--muted); font-family: inherit; transition: all 0.2s; white-space: nowrap; }
+    .tab-pill.active { background: var(--purple); color: white; box-shadow: 0 4px 12px rgba(124,58,237,0.3); }
+    .tab-pill:hover:not(.active) { color: var(--purple); background: var(--purple-lt); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
 
-    .steps-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
-    .steps-card ol { padding-left: 20px; }
-    .steps-card li { font-size: 14px; margin-bottom: 8px; line-height: 1.6; }
+    /* ── Data sources ── */
+    .sources-card { background: rgba(124,58,237,0.04); border: 1px solid rgba(124,58,237,0.15); border-radius: 12px; padding: 12px 18px; margin-top: 14px; margin-bottom: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+    .sources-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--purple); margin-right: 6px; flex-shrink: 0; }
+    .source-link { font-size: 11px; color: var(--muted); text-decoration: none; word-break: break-all; }
+    .source-link:hover { color: var(--purple); }
+    .source-sep { color: var(--border); font-size: 13px; flex-shrink: 0; }
 
-    /* ── Data Sources Card ── */
-    .sources-card { background: rgba(20,184,166,0.04); border: 1px solid rgba(20,184,166,0.2); border-radius: 12px; padding: 16px 20px; margin-top: 8px; }
-    .sources-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--accent); margin-bottom: 10px; }
-    .sources-list { display: flex; flex-direction: column; gap: 4px; }
-    .source-link { font-size: 12px; color: var(--muted); text-decoration: none; word-break: break-all; }
-    .source-link:hover { color: var(--accent); }
-
-    /* ── Financials Table ── */
-    .fin-table-wrap { overflow-x: auto; }
-    .fin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .fin-table th { background: var(--surface2); padding: 9px 12px; text-align: right; border: 1px solid var(--border); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+    /* ── Financials table ── */
+    .fin-wrap { overflow-x: auto; }
+    .fin-table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+    .fin-table th { background: var(--bg); padding: 8px 12px; text-align: right; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
     .fin-table th:first-child { text-align: left; }
-    .fin-table td { padding: 8px 12px; border: 1px solid var(--border); text-align: right; color: var(--muted); }
-    .fin-table td:first-child { font-weight: 600; color: var(--text); text-align: left; }
-    .fin-table tr:nth-child(even) td { background: rgba(51,65,85,0.25); }
+    .fin-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); text-align: right; color: var(--muted); }
+    .fin-table td:first-child { font-weight: 700; color: var(--text); text-align: left; }
+    .fin-table tr:last-child td { border-bottom: none; }
 
-    /* ── Markdown fallback ── */
-    .md-content { line-height: 1.7; font-size: 14px; }
-    .md-content h1 { font-size: 22px; margin-bottom: 16px; }
-    .md-content h2 { font-size: 18px; margin: 20px 0 10px; color: var(--accent); }
-    .md-content h3 { font-size: 15px; margin: 16px 0 8px; }
-    .md-content h4 { font-size: 13px; margin: 12px 0 6px; color: var(--muted); }
-    .md-content p { margin-bottom: 10px; }
-    .md-content ul, .md-content ol { padding-left: 20px; margin-bottom: 10px; }
-    .md-content li { margin-bottom: 4px; }
-    .md-content table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 13px; }
-    .md-content th { background: var(--surface2); padding: 8px 12px; text-align: left; border: 1px solid var(--border); }
-    .md-content td { padding: 8px 12px; border: 1px solid var(--border); }
-    .md-content tr:nth-child(even) td { background: rgba(51,65,85,0.3); }
-    .md-content code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-    .md-content hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
-    .md-content strong { color: var(--text); }
+    /* ── Flag / list rows ── */
+    .flag-item { font-size: 13px; color: var(--muted); padding: 8px 0; border-bottom: 1px solid var(--border); line-height: 1.5; display: flex; gap: 8px; }
+    .flag-item:last-child { border-bottom: none; }
+    .flag-icon { flex-shrink: 0; color: var(--error); }
+    .list-row { font-size: 13px; padding: 7px 0; border-bottom: 1px solid var(--border); color: var(--muted); line-height: 1.5; display: flex; gap: 8px; }
+    .list-row:last-child { border-bottom: none; }
+    .list-arrow { color: var(--purple); font-weight: 700; flex-shrink: 0; }
 
-    /* ── Tab Navigation ── */
-    .tab-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); }
-    .tab-nav-btn {
-      padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
-      cursor: pointer; font-family: inherit; transition: all 0.2s;
-      border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    /* ── Risk cards ── */
+    .risk-hero { border-radius: 20px; padding: 30px; text-align: center; margin-bottom: 20px; }
+    .risk-AMBER { background: rgba(245,158,11,0.08); border: 2px solid rgba(245,158,11,0.3); }
+    .risk-RED   { background: rgba(239,68,68,0.08); border: 2px solid rgba(239,68,68,0.3); }
+    .risk-GREEN { background: rgba(16,185,129,0.08); border: 2px solid rgba(16,185,129,0.3); }
+    .risk-lbl-text { font-size: 32px; font-weight: 900; letter-spacing: 0.04em; margin-top: 4px; }
+    .risk-item { background: var(--card); border-radius: 14px; padding: 18px 20px; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border); border-left: 4px solid transparent; }
+    .risk-item.HIGH { border-left-color: var(--error); }
+    .risk-item.MEDIUM { border-left-color: var(--warning); }
+    .risk-item.LOW { border-left-color: var(--success); }
+    .risk-item-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 12px; }
+    .risk-item-title { font-size: 15px; font-weight: 700; }
+    .risk-item-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 8px; }
+    .risk-mitigant { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .risk-mitigant strong { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--purple); }
+
+    /* ── Deal ── */
+    .decision-hero { border-radius: 20px; padding: 36px; text-align: center; margin-bottom: 22px; }
+    .dec-GO      { background: linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04)); border: 2px solid rgba(16,185,129,0.35); }
+    .dec-NO_GO   { background: linear-gradient(135deg,rgba(239,68,68,0.12),rgba(239,68,68,0.04)); border: 2px solid rgba(239,68,68,0.35); }
+    .dec-REVISIT { background: linear-gradient(135deg,rgba(245,158,11,0.12),rgba(245,158,11,0.04)); border: 2px solid rgba(245,158,11,0.35); }
+    .dec-word { font-size: 40px; font-weight: 900; letter-spacing: 0.04em; }
+    .dec-GO .dec-word    { color: var(--success); }
+    .dec-NO_GO .dec-word { color: var(--error); }
+    .dec-REVISIT .dec-word { color: var(--warning); }
+    .val-bar { background: var(--bg); border-radius: 99px; height: 10px; overflow: hidden; margin: 12px 0 6px; }
+    .val-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--purple), var(--gold)); }
+    .value-avenue { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .value-avenue:last-child { border-bottom: none; }
+    .value-avenue-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+    .value-avenue-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .value-avenue-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    /* ── Pipeline page ── */
+    .pipeline-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 4px; }
+    .pipeline-section-lbl { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.09em; margin: 22px 0 12px; display: flex; align-items: center; gap: 8px; }
+    .pipeline-section-lbl::after { content:''; flex:1; height:1px; background: var(--border); }
+    .agent-card { background: var(--card); border-radius: 14px; padding: 18px 20px; border: 1.5px solid var(--border); box-shadow: var(--shadow); position: relative; }
+    .agent-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:3px 0 0 3px; background: #e5e7eb; }
+    .agent-card.running { border-color: rgba(124,58,237,0.3); animation: ac-pulse 2s infinite; }
+    .agent-card.running::before { background: var(--purple); }
+    .agent-card.complete { border-color: rgba(16,185,129,0.3); }
+    .agent-card.complete::before { background: var(--success); }
+    .agent-card.error { border-color: rgba(239,68,68,0.3); }
+    .agent-card.error::before { background: var(--error); }
+    @keyframes ac-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,0.15)} 50%{box-shadow:0 0 0 6px rgba(124,58,237,0.06)} }
+    .agent-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+    .agent-role { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+    .agent-footer { display: flex; align-items: center; justify-content: space-between; }
+    .agent-timer { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); }
+    .agent-timer.running { color: var(--purple); }
+    .agent-timer.complete { color: var(--success); }
+    .progress-track { background: var(--bg); border-radius: 99px; height: 6px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--purple), var(--gold)); transition: width 0.5s ease; }
+
+    /* ── Home page ── */
+    .home-layout { display: grid; grid-template-columns: 2fr 1.1fr; grid-template-rows: auto auto auto; gap: 18px; }
+    .hero-card {
+      grid-column: span 2;
+      background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 45%, #a855f7 100%);
+      border-radius: 20px; padding: 36px 40px; color: white;
+      display: flex; align-items: center; gap: 40px;
+      box-shadow: 0 8px 32px rgba(124,58,237,0.35);
     }
-    .tab-nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-    .tab-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-    .tab-nav-center { font-size: 13px; color: var(--muted); }
+    .hero-content { flex: 1; }
+    .hero-title { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .hero-sub { font-size: 14px; opacity: 0.8; margin-bottom: 22px; line-height: 1.6; }
+    .hero-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .hero-chip { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 500; }
+    .hero-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; min-width: 200px; }
+    .hero-box { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; padding: 10px 6px; text-align: center; font-size: 10px; font-weight: 600; }
+    .hero-box .ico { font-size: 20px; margin-bottom: 4px; }
+    .form-card { grid-column: 1; grid-row: 2; }
+    .form-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; display: block; }
+    .form-input { width: 100%; padding: 12px 16px; background: var(--bg); border: 1.5px solid transparent; border-radius: 10px; color: var(--text); font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; margin-bottom: 14px; }
+    .form-input:focus { border-color: var(--purple); background: white; }
+    .form-input::placeholder { color: var(--muted); }
+    .form-divider { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
+    .form-divider-line { flex: 1; height: 1px; background: var(--border); }
+    .form-divider-txt { font-size: 11px; color: var(--muted); font-weight: 500; }
+    .recent-card { grid-column: 2; grid-row: 2 / 4; }
+    .recent-item { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: opacity 0.2s; }
+    .recent-item:last-child { border-bottom: none; }
+    .recent-item:hover { opacity: 0.8; }
+    .recent-ico { width: 38px; height: 38px; border-radius: 11px; background: var(--purple-lt); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .recent-title { font-size: 14px; font-weight: 600; }
+    .recent-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .recent-arrow { margin-left: auto; color: var(--muted); font-size: 18px; flex-shrink: 0; }
+    .stats-row { grid-column: 1; grid-row: 3; display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+    .stat-card { background: var(--card); border-radius: 14px; padding: 18px 20px; box-shadow: var(--shadow); border: 1px solid var(--border); text-align: center; }
+    .stat-num { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+    .stat-lbl { font-size: 11px; color: var(--muted); font-weight: 500; }
 
-    /* ── Pie chart container ── */
-    .pie-wrap { position: relative; height: 220px; max-width: 320px; margin: 0 auto; }
-
+    /* ── Loading ── */
     .loading { color: var(--muted); font-size: 14px; padding: 32px; text-align: center; }
-    .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── KPI Box ── */
+    .kpi { background: var(--bg); border-radius: 12px; padding: 14px 16px; }
+    .kpi-lbl { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .kpi-val { font-size: 22px; font-weight: 800; }
+    .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .kpi-purple { color: var(--purple); }
+    .kpi-green  { color: var(--success); }
+    .kpi-red    { color: var(--error); }
+    .kpi-gold   { color: var(--gold); }
+
+    /* ── Bar row (shareholders) ── */
+    .bar-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .bar-row:last-child { border-bottom: none; }
+    .bar-name { font-size: 13px; font-weight: 600; min-width: 140px; }
+    .bar-type { font-size: 11px; color: var(--muted); min-width: 70px; }
+    .bar-track { flex: 1; background: var(--bg); border-radius: 99px; height: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--purple), var(--purple-md)); }
+    .bar-pct { font-size: 13px; font-weight: 700; color: var(--purple); min-width: 36px; text-align: right; }
+
+    /* ── Narrative ── */
+    .narrative { font-size: 13px; color: var(--muted); line-height: 1.8; }
+
+    /* ── Fin color ── */
+    .fin-pos { color: var(--success); font-weight: 600; }
+    .fin-neg { color: var(--error); font-weight: 600; }
+
+    /* ── Regulatory alerts ── */
+    .reg-alert { padding: 9px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 8px; line-height: 1.5; }
+    .reg-alert:last-child { margin-bottom: 0; }
+    .reg-green  { background: rgba(16,185,129,0.06); border-left: 3px solid var(--success); }
+    .reg-red    { background: rgba(239,68,68,0.06); border-left: 3px solid var(--error); }
+    .reg-yellow { background: rgba(245,158,11,0.06); border-left: 3px solid var(--warning); }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">
-    <div class="logo-icon">M&A</div>
-    <div class="logo-text">M&amp;A Assessment Accelerator</div>
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-logo">M&A</div>
+  <div class="sidebar-nav">
+    <div class="sidebar-icon active" id="nav-home" onclick="navTo('home')" title="Home">🏠</div>
+    <div class="sidebar-icon" id="nav-pipeline" onclick="navTo('pipeline')" title="Pipeline">⚡</div>
+    <div class="sidebar-icon" id="nav-results" onclick="navTo('results')" title="Results">📊</div>
   </div>
-  <a id="band-room-link" class="band-link" href="#" target="_blank" style="display:none">
-    Watch agents collaborate in real-time →
-  </a>
-</header>
+  <div class="sidebar-icon" title="About">💬</div>
+</div>
 
-<main>
-
-  <!-- Input Section -->
-  <div id="input-section">
-    <div class="section-title">Start New Assessment</div>
-    <div class="section-sub">Enter the acquirer and target to launch a 9-agent M&amp;A analysis</div>
-    <div class="form-group">
-      <label>Acquirer / Buy-Side Company</label>
-      <input type="text" id="buyer-input" placeholder="e.g. stc — Saudi Telecom Company" />
+<div class="main">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="user-pill">
+      <div class="user-avatar">M&A</div>
+      <div><div class="user-name">Assessment Accelerator</div></div>
     </div>
-    <div class="form-group">
-      <label>Target / Sell-Side Company</label>
-      <input type="text" id="target-input" placeholder="e.g. Telenor Pakistan" />
+    <div class="topbar-center" id="topbar-title"></div>
+    <div class="topbar-right">
+      <div class="search-bar">🔍 Search assessments…</div>
+      <div id="band-room-btn" class="icon-btn" style="display:none" title="Watch agents in Band">🔗</div>
     </div>
-    <button class="btn-primary" id="start-btn" onclick="startAssessment()">Start Assessment</button>
   </div>
 
-  <!-- Pipeline Section -->
-  <div id="pipeline-section">
-    <button id="new-assessment-btn" onclick="resetToInput()">← New Assessment</button>
-    <div class="assessment-header">
+  <!-- ══════════════════════════════════════════
+       PAGE: HOME
+  ══════════════════════════════════════════ -->
+  <div class="page active" id="page-home">
+    <div class="page-header">
       <div>
-        <div class="assessment-title" id="assessment-title">Assessment in progress...</div>
-        <div class="assessment-meta" id="assessment-meta"></div>
+        <div class="page-title">Dashboard</div>
+        <div style="color:var(--muted);font-size:14px;margin-top:2px">M&amp;A Intelligence Platform · 9-Agent AI Pipeline</div>
       </div>
-      <div class="status-badge status-IN_PROGRESS" id="overall-status-badge">IN PROGRESS</div>
     </div>
+    <div class="home-layout">
+      <!-- Hero -->
+      <div class="hero-card">
+        <div class="hero-content">
+          <div class="hero-title">Start a New M&amp;A Assessment</div>
+          <div class="hero-sub">9 AI agents run in parallel — country, sector &amp; company analysis for both buyer and target, followed by risk synthesis and a Go/No-Go recommendation.</div>
+          <div class="hero-chips">
+            <span class="hero-chip">🌍 Country Analysis</span>
+            <span class="hero-chip">📡 Sector Dynamics</span>
+            <span class="hero-chip">🏢 Company Due Diligence</span>
+            <span class="hero-chip">⚠️ Risk Synthesis</span>
+            <span class="hero-chip">🤝 Deal Rationale</span>
+          </div>
+        </div>
+        <div class="hero-grid">
+          <div class="hero-box"><div class="ico">🌍</div>Country</div>
+          <div class="hero-box"><div class="ico">📡</div>Sector</div>
+          <div class="hero-box"><div class="ico">🏢</div>Company</div>
+          <div class="hero-box"><div class="ico">🌍</div>B.Country</div>
+          <div class="hero-box"><div class="ico">📡</div>B.Sector</div>
+          <div class="hero-box"><div class="ico">🏢</div>B.Company</div>
+          <div class="hero-box"><div class="ico">⚠️</div>Risk</div>
+          <div class="hero-box"><div class="ico">🤝</div>Deal</div>
+          <div class="hero-box" style="background:rgba(245,158,11,0.3)"><div class="ico">🎯</div>Coord</div>
+        </div>
+      </div>
+      <!-- Form -->
+      <div class="card form-card" style="margin-bottom:0">
+        <div class="card-title"><span class="card-title-dot"></span>New Assessment</div>
+        <label class="form-label">Acquirer / Buy-Side Company</label>
+        <input class="form-input" id="buyer-input" placeholder="e.g. Nokia" oninput="onCompanyInput('buyer')" />
+        <div class="g2" style="gap:8px;margin-top:8px;margin-bottom:4px">
+          <div>
+            <label class="form-label" style="font-size:11px;margin-bottom:4px">Buyer Sector</label>
+            <input class="form-input" id="buyer-sector-input" placeholder="Auto-detecting…" oninput="checkFormReady()" style="padding:8px 12px;font-size:13px" />
+          </div>
+          <div>
+            <label class="form-label" style="font-size:11px;margin-bottom:4px">Buyer Country</label>
+            <input class="form-input" id="buyer-country-input" placeholder="Auto-detecting…" oninput="checkFormReady()" style="padding:8px 12px;font-size:13px" />
+          </div>
+        </div>
+        <div class="form-divider"><div class="form-divider-line"></div><span class="form-divider-txt">acquires</span><div class="form-divider-line"></div></div>
+        <label class="form-label">Target / Sell-Side Company</label>
+        <input class="form-input" id="target-input" placeholder="e.g. CoreWeave" oninput="onCompanyInput('target')" />
+        <div class="g2" style="gap:8px;margin-top:8px;margin-bottom:16px">
+          <div>
+            <label class="form-label" style="font-size:11px;margin-bottom:4px">Target Sector</label>
+            <input class="form-input" id="seller-sector-input" placeholder="Auto-detecting…" oninput="checkFormReady()" style="padding:8px 12px;font-size:13px" />
+          </div>
+          <div>
+            <label class="form-label" style="font-size:11px;margin-bottom:4px">Target Country</label>
+            <input class="form-input" id="seller-country-input" placeholder="Auto-detecting…" oninput="checkFormReady()" style="padding:8px 12px;font-size:13px" />
+          </div>
+        </div>
+        <button class="btn-gold" id="start-btn" onclick="startAssessment()" disabled style="width:100%;padding:14px;font-size:15px;opacity:0.5;cursor:not-allowed">Start Assessment →</button>
+        <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">Fill all fields to start · Typical run: 6–12 min</div>
+      </div>
+      <!-- Recent -->
+      <div class="card recent-card" style="margin-bottom:0">
+        <div class="card-title"><span class="card-title-dot"></span>Recent Assessments</div>
+        <div id="recent-list"><div class="loading"><span class="spinner"></span>Loading…</div></div>
+      </div>
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num" id="stat-total" style="color:var(--purple)">—</div><div class="stat-lbl">Total</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-go" style="color:var(--success)">—</div><div class="stat-lbl">GO</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-revisit" style="color:var(--gold)">—</div><div class="stat-lbl">REVISIT</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-nogo" style="color:var(--error)">—</div><div class="stat-lbl">NO-GO</div></div>
+      </div>
+    </div>
+  </div>
 
-    <div class="row-label">Buy-Side Agents</div>
+  <!-- ══════════════════════════════════════════
+       PAGE: PIPELINE
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-pipeline">
+    <button class="btn-outline" onclick="resetToInput()" style="margin-bottom:20px">← New Assessment</button>
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="assessment-title">Assessment in progress…</div>
+        <div style="color:var(--muted);font-size:13px;margin-top:3px" id="assessment-meta"></div>
+      </div>
+      <span class="badge b-gold" id="overall-status-badge" style="font-size:13px;padding:6px 14px"><span class="badge-dot"></span>IN PROGRESS</span>
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px">
+        <span>Pipeline Progress</span>
+        <span style="font-weight:600" id="progress-label">0 / 9 agents complete</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progress-bar" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px">
+        <span id="phase-1-lbl">Phase 1 — Research</span>
+        <span>Phase 2 — Risk Synthesis</span>
+        <span>Phase 3 — Deal Rationale</span>
+      </div>
+    </div>
+    <div class="pipeline-section-lbl">Buy-Side Agents</div>
     <div class="pipeline-row" id="row-buyer"></div>
-    <div class="row-label">Sell-Side Agents</div>
+    <div class="pipeline-section-lbl">Sell-Side Agents</div>
     <div class="pipeline-row" id="row-target"></div>
-    <div class="row-label">Synthesis Agents</div>
+    <div class="pipeline-section-lbl">Synthesis Agents</div>
     <div class="pipeline-row" id="row-synthesis"></div>
   </div>
 
-  <!-- Results Section -->
-  <div id="results-section">
-    <button id="new-assessment-btn2" onclick="resetToInput()">← New Assessment</button>
-    <div class="tabs" id="tabs-bar"></div>
+  <!-- ══════════════════════════════════════════
+       PAGE: RESULTS
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-results">
+    <button class="btn-outline" onclick="resetToInput()" style="margin-bottom:20px">← New Assessment</button>
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="results-title">Results</div>
+        <div style="color:var(--muted);font-size:13px;margin-top:3px" id="results-meta"></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span class="badge b-green" id="results-status-badge" style="font-size:13px;padding:6px 14px">● COMPLETE</span>
+        <button class="btn-outline" id="band-room-btn2" style="display:none">Watch in Band 🔗</button>
+      </div>
+    </div>
+    <!-- Summary metrics -->
+    <div class="metrics-row" id="summary-metrics">
+      <div class="metric"><div class="metric-lbl">Deal Decision</div><div class="metric-val" id="sum-decision" style="color:var(--warning)">—</div><div class="metric-sub" id="sum-decision-sub"></div></div>
+      <div class="metric"><div class="metric-lbl">Overall Risk</div><div class="metric-val" id="sum-risk" style="color:var(--warning)">—</div><div class="metric-sub" id="sum-risk-sub"></div></div>
+      <div class="metric"><div class="metric-lbl">Target Valuation</div><div class="metric-val" id="sum-val" style="color:var(--purple)">—</div><div class="metric-sub" id="sum-val-sub"></div></div>
+      <div class="metric"><div class="metric-lbl">Avg. Confidence</div><div class="metric-val" id="sum-conf" style="color:var(--success)">—</div><div class="metric-sub">Across all agents</div></div>
+    </div>
+    <!-- Tabs -->
+    <div class="tabs-wrap" id="tabs-bar"></div>
     <div id="tabs-content"></div>
   </div>
 
-</main>
+</div><!-- /main -->
 
 <script>
-// ── Constants ──────────────────────────────────────────────────────────────────
+// ── Constants ────────────────────────────────────────────────────────────────
 const BUYER_AGENTS = [
   { id: 'buyer-country-agent', label: '@buyer-country-agent', role: 'Buyer Country Research',  phase: 1 },
   { id: 'buyer-sector-agent',  label: '@buyer-sector-agent',  role: 'Buyer Sector Research',   phase: 1 },
   { id: 'buyer-company-agent', label: '@buyer-company-agent', role: 'Buyer Company Research',  phase: 1 },
 ];
 const TARGET_AGENTS = [
-  { id: 'country-agent',       label: '@country-agent',       role: 'Target Country Research', phase: 1 },
-  { id: 'sector-agent',        label: '@sector-agent',        role: 'Target Sector Research',  phase: 1 },
-  { id: 'company-agent',       label: '@company-agent',       role: 'Target Company Research', phase: 1 },
+  { id: 'seller-country-agent', label: '@seller-country-agent', role: 'Target Country Research', phase: 1 },
+  { id: 'seller-sector-agent',  label: '@seller-sector-agent',  role: 'Target Sector Research',  phase: 1 },
+  { id: 'seller-company-agent', label: '@seller-company-agent', role: 'Target Company Research', phase: 1 },
 ];
 const SYNTH_AGENTS = [
-  { id: 'risk-agent',           label: '@risk-agent',           role: 'Risk Synthesis',       phase: 2 },
-  { id: 'deal-rationale-agent', label: '@deal-rationale-agent', role: 'Deal Recommendation',  phase: 3 },
-  { id: 'coordinator',          label: '@coordinator',          role: 'Orchestrator',          phase: 0 },
+  { id: 'risk-agent',           label: '@risk-agent',           role: 'Risk Synthesis',      phase: 2 },
+  { id: 'deal-rationale-agent', label: '@deal-rationale-agent', role: 'Deal Recommendation', phase: 3 },
+  { id: 'coordinator',          label: '@coordinator',          role: 'Orchestrator',         phase: 0 },
 ];
 const ALL_AGENTS = [...BUYER_AGENTS, ...TARGET_AGENTS, ...SYNTH_AGENTS];
 
 const AGENT_FILES = {
-  'country-agent':        { index: '01', tabGroup: 1 },
-  'sector-agent':         { index: '02', tabGroup: 1 },
-  'company-agent':        { index: '03', tabGroup: 1 },
+  'seller-country-agent': { index: '01', tabGroup: 1 },
+  'seller-sector-agent':  { index: '02', tabGroup: 1 },
+  'seller-company-agent': { index: '03', tabGroup: 1 },
   'buyer-country-agent':  { index: '04', tabGroup: 0 },
   'buyer-sector-agent':   { index: '05', tabGroup: 0 },
   'buyer-company-agent':  { index: '06', tabGroup: 0 },
   'risk-agent':           { index: '07', tabGroup: 2 },
   'deal-rationale-agent': { index: '08', tabGroup: 3 },
+  // Legacy aliases — pre-rename assessments use these names
+  'country-agent':        { index: '01', tabGroup: 1 },
+  'sector-agent':         { index: '02', tabGroup: 1 },
+  'company-agent':        { index: '03', tabGroup: 1 },
 };
 
 const TAB_DEFS = [
-  { id: 'tab-buy',  label: 'Buy Side Analysis',  agents: ['buyer-country-agent','buyer-sector-agent','buyer-company-agent'], type: 'buy' },
-  { id: 'tab-sell', label: 'Sell Side Analysis', agents: ['country-agent','sector-agent','company-agent'], type: 'sell' },
-  { id: 'tab-risk', label: 'Risk Assessment',    agents: ['risk-agent'], type: 'risk' },
-  { id: 'tab-deal', label: 'Deal Recommendation',agents: ['deal-rationale-agent'], type: 'deal' },
+  { id: 'tab-buy',  label: 'Buy Side Analysis',   agents: ['buyer-country-agent','buyer-sector-agent','buyer-company-agent'], type: 'buy' },
+  { id: 'tab-sell', label: 'Sell Side Analysis',  agents: ['seller-country-agent','seller-sector-agent','seller-company-agent'], type: 'sell' },
+  { id: 'tab-risk', label: 'Risk Assessment',     agents: ['risk-agent'], type: 'risk' },
+  { id: 'tab-deal', label: 'Deal Recommendation', agents: ['deal-rationale-agent'], type: 'deal' },
 ];
 
-// ── State ──────────────────────────────────────────────────────────────────────
+const AGENT_ICONS = {
+  'seller-country-agent': '🌍', 'seller-sector-agent': '📡', 'seller-company-agent': '🏢',
+  'buyer-country-agent': '🌍', 'buyer-sector-agent': '📡', 'buyer-company-agent': '🏢',
+  'risk-agent': '⚠️', 'deal-rationale-agent': '🤝', 'coordinator': '🎯',
+};
+
+// ── State ──────────────────────────────────────────────────────────────────
 let currentAssessmentId = null;
 let pollTimer = null;
 let renderedAgents = new Set();
-let tabContents = {};   // tabIdx -> [{agentId, content}]
+let tabContents = {};
 let agentStartTimes = {};
 let agentEndTimes = {};
 let timerInterval = null;
 let manifest = null;
 let chartRegistry = {};
+let bandRoomUrl = null;
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function show(id) { const el = document.getElementById(id); if(el) el.style.display='block'; }
-function hide(id) { const el = document.getElementById(id); if(el) el.style.display='none'; }
+// ── Navigation ────────────────────────────────────────────────────────────
+function navTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-icon[id^="nav-"]').forEach(i => i.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const nav = document.getElementById('nav-' + page);
+  if (nav) nav.classList.add('active');
+  const tc = document.getElementById('topbar-title');
+  if (page === 'pipeline' || page === 'results') {
+    const t = document.getElementById('assessment-title');
+    tc.textContent = t ? t.textContent : '';
+    tc.style.display = 'block';
+  } else {
+    tc.style.display = 'none';
+  }
+}
 
 function formatTime(ms) {
   const s = Math.floor(ms / 1000);
@@ -367,7 +560,7 @@ function isAgentRunning(agent, phase, completed) {
   return false;
 }
 
-// ── Grid Rendering ────────────────────────────────────────────────────────────
+// ── Pipeline grid ─────────────────────────────────────────────────────────
 function renderAgentCard(agent, completed, phase) {
   const info = completed && completed[agent.id];
   const running = !info && isAgentRunning(agent, phase, completed);
@@ -375,31 +568,32 @@ function renderAgentCard(agent, completed, phase) {
   if (info && !agentEndTimes[agent.id]) agentEndTimes[agent.id] = Date.now();
 
   let cls = 'agent-card';
-  let badgeCls = 'badge-WAITING', badgeTxt = 'Waiting';
-  if (info)    { cls += ' complete'; badgeCls = 'badge-COMPLETE'; badgeTxt = 'Complete'; }
-  else if (running) { cls += ' running';  badgeCls = 'badge-RUNNING';  badgeTxt = 'Running'; }
+  let badge = '';
+  if (info)    { cls += ' complete'; badge = `<span class="badge b-green" style="font-size:11px">Complete</span>`; }
+  else if (running) { cls += ' running'; badge = `<span class="badge b-purple" style="font-size:11px"><span class="badge-dot"></span>Running</span>`; }
+  else         { badge = `<span class="badge b-gray" style="font-size:11px">Waiting</span>`; }
 
   const elapsed = info
     ? formatTime((agentEndTimes[agent.id] || Date.now()) - (agentStartTimes[agent.id] || Date.now()))
-    : (running ? formatTime(Date.now() - agentStartTimes[agent.id]) : '');
-  const timerCls = info ? 'agent-timer complete' : (running ? 'agent-timer running' : 'agent-timer');
+    : (running ? formatTime(Date.now() - (agentStartTimes[agent.id] || Date.now())) : '—');
+  const timerCls = 'agent-timer' + (info ? ' complete' : running ? ' running' : '');
 
-  return `
-    <div class="${cls}" id="card-${agent.id}">
-      <div class="agent-name">${agent.label}</div>
-      <div class="agent-role">${agent.role}</div>
-      <div class="agent-footer">
-        <span class="agent-status-badge ${badgeCls}">${badgeTxt}</span>
-        <span class="${timerCls}" id="timer-${agent.id}">${elapsed}</span>
-      </div>
-    </div>`;
+  const icon = AGENT_ICONS[agent.id] || '🤖';
+  return `<div class="${cls}" id="card-${agent.id}">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+      <div style="width:36px;height:36px;border-radius:10px;background:var(--purple-lt);display:flex;align-items:center;justify-content:center;font-size:18px">${icon}</div>
+      ${badge}
+    </div>
+    <div class="agent-name">${escHtml(agent.label)}</div>
+    <div class="agent-role">${escHtml(agent.role)}</div>
+    <div class="agent-footer">
+      <span></span>
+      <span class="${timerCls}" id="timer-${agent.id}">${elapsed}</span>
+    </div>
+  </div>`;
 }
 
 function renderGrid(completed, phase) {
-  ['row-buyer','row-target','row-synthesis'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = '';
-  });
   const groups = [
     { rowId: 'row-buyer',     agents: BUYER_AGENTS },
     { rowId: 'row-target',    agents: TARGET_AGENTS },
@@ -409,6 +603,15 @@ function renderGrid(completed, phase) {
     const row = document.getElementById(g.rowId);
     if (row) row.innerHTML = g.agents.map(a => renderAgentCard(a, completed, phase)).join('');
   }
+  // Update progress bar
+  const doneCount = Object.keys(completed || {}).filter(k => k !== 'coordinator').length;
+  const pct = Math.round((doneCount / 8) * 100);
+  const bar = document.getElementById('progress-bar');
+  const lbl = document.getElementById('progress-label');
+  if (bar) bar.style.width = pct + '%';
+  if (lbl) lbl.textContent = `${doneCount} / 9 agents complete`;
+  const p1lbl = document.getElementById('phase-1-lbl');
+  if (p1lbl && phase !== 'PHASE_1') p1lbl.style.color = 'var(--success)';
 }
 
 function startTimerTick() {
@@ -425,48 +628,101 @@ function startTimerTick() {
         el.textContent = formatTime(Date.now() - agentStartTimes[agent.id]);
         el.className = 'agent-timer running';
       } else if (info && agentStartTimes[agent.id]) {
-        const end = agentEndTimes[agent.id] || Date.now();
-        el.textContent = formatTime(end - agentStartTimes[agent.id]);
+        el.textContent = formatTime((agentEndTimes[agent.id] || Date.now()) - agentStartTimes[agent.id]);
         el.className = 'agent-timer complete';
       }
     }
   }, 1000);
 }
 
-// ── API ───────────────────────────────────────────────────────────────────────
+// ── API ───────────────────────────────────────────────────────────────────
+let detectTimers = {};
+function onCompanyInput(side) {
+  const inputId = side === 'buyer' ? 'buyer-input' : 'target-input';
+  const sectorId = side === 'buyer' ? 'buyer-sector-input' : 'seller-sector-input';
+  const countryId = side === 'buyer' ? 'buyer-country-input' : 'seller-country-input';
+  const company = document.getElementById(inputId).value.trim();
+  checkFormReady();
+  if (detectTimers[side]) clearTimeout(detectTimers[side]);
+  if (company.length < 2) return;
+  document.getElementById(sectorId).placeholder = 'Detecting…';
+  document.getElementById(countryId).placeholder = 'Detecting…';
+  detectTimers[side] = setTimeout(async () => {
+    try {
+      const resp = await fetch('/detect-company', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company_name: company }),
+      });
+      const data = await resp.json();
+      const sEl = document.getElementById(sectorId);
+      const cEl = document.getElementById(countryId);
+      if (data.sector) { sEl.value = data.sector; sEl.placeholder = ''; }
+      if (data.country) { cEl.value = data.country; cEl.placeholder = ''; }
+      checkFormReady();
+    } catch (e) {
+      document.getElementById(sectorId).placeholder = 'Enter manually';
+      document.getElementById(countryId).placeholder = 'Enter manually';
+    }
+  }, 800);
+}
+
+function checkFormReady() {
+  const btn = document.getElementById('start-btn');
+  const buyer = document.getElementById('buyer-input')?.value.trim();
+  const target = document.getElementById('target-input')?.value.trim();
+  const bSector = document.getElementById('buyer-sector-input')?.value.trim();
+  const bCountry = document.getElementById('buyer-country-input')?.value.trim();
+  const sSector = document.getElementById('seller-sector-input')?.value.trim();
+  const sCountry = document.getElementById('seller-country-input')?.value.trim();
+  const ready = !!(buyer && target && bSector && bCountry && sSector && sCountry);
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? '1' : '0.5';
+  btn.style.cursor = ready ? 'pointer' : 'not-allowed';
+}
+
 async function startAssessment() {
   const buyer = document.getElementById('buyer-input').value.trim();
   const target = document.getElementById('target-input').value.trim();
+  const buyerSector = document.getElementById('buyer-sector-input').value.trim();
+  const buyerCountry = document.getElementById('buyer-country-input').value.trim();
+  const sellerSector = document.getElementById('seller-sector-input').value.trim();
+  const sellerCountry = document.getElementById('seller-country-input').value.trim();
   if (!buyer || !target) { alert('Please enter both companies'); return; }
 
   const btn = document.getElementById('start-btn');
-  btn.disabled = true; btn.textContent = 'Starting...';
+  btn.disabled = true; btn.textContent = 'Starting…';
 
   try {
     const resp = await fetch('/assessments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ buyer_company: buyer, target_company: target, assessment_type: 'LEVEL_2' }),
+      body: JSON.stringify({
+        buyer_company: buyer, target_company: target, assessment_type: 'LEVEL_2',
+        buyer_sector: buyerSector, buyer_country: buyerCountry,
+        seller_sector: sellerSector, seller_country: sellerCountry,
+      }),
     });
     const data = await resp.json();
     currentAssessmentId = data.assessment_id;
 
-    document.getElementById('assessment-title').textContent = `${buyer} → ${target}`;
-    document.getElementById('assessment-meta').textContent = `ID: ${currentAssessmentId}`;
+    const titleEl = document.getElementById('assessment-title');
+    titleEl.textContent = `${buyer} → ${target}`;
+    document.getElementById('assessment-meta').textContent = `Assessment ID: ${currentAssessmentId}`;
 
-    hide('input-section');
-    show('pipeline-section');
+    navTo('pipeline');
     renderGrid({}, 'PHASE_1');
     startTimerTick();
     startPolling();
   } catch (e) {
     alert('Failed to start assessment: ' + e.message);
-    btn.disabled = false; btn.textContent = 'Start Assessment';
+    btn.disabled = false; btn.textContent = 'Start Assessment →';
   }
 }
 
 function startPolling() {
-  pollTimer = setInterval(poll, 5000);
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(poll, 4000);
   poll();
 }
 
@@ -480,17 +736,27 @@ async function poll() {
     if (manifest.overall_status === 'COMPLETE' || manifest.overall_status === 'NEEDS_HUMAN_REVIEW') {
       clearInterval(pollTimer);
       clearInterval(timerInterval);
-      hide('pipeline-section');
+      updateSummaryMetrics(manifest);
+      navTo('results');
     }
   } catch (e) { /* network hiccup */ }
 }
 
 async function updateUI(m) {
   const badge = document.getElementById('overall-status-badge');
-  badge.textContent = m.overall_status || 'IN_PROGRESS';
-  badge.className = 'status-badge status-' + (m.overall_status || 'IN_PROGRESS');
+  const statusText = m.overall_status || 'IN PROGRESS';
+  badge.innerHTML = `<span class="badge-dot"></span>${statusText.replace('_',' ')}`;
+  if (statusText === 'COMPLETE') badge.className = 'badge b-green';
+  else if (statusText === 'NEEDS_HUMAN_REVIEW') badge.className = 'badge b-red';
+  else badge.className = 'badge b-gold';
 
   renderGrid(m.completed_agents || {}, m.phase || 'PHASE_1');
+
+  if (m.band_room_url && !bandRoomUrl) {
+    bandRoomUrl = m.band_room_url;
+    const btn = document.getElementById('band-room-btn');
+    if (btn) { btn.style.display = 'flex'; btn.onclick = () => window.open(bandRoomUrl, '_blank'); }
+  }
 
   const completed = m.completed_agents || {};
   for (const [agentId, info] of Object.entries(completed)) {
@@ -505,8 +771,50 @@ async function updateUI(m) {
       addToTab(def.tabGroup, agentId, fd.content);
     } catch(e) {}
   }
+
+  // Show results section as agents complete
+  if (Object.keys(completed).length > 0) {
+    updateSummaryMetrics(m);
+  }
 }
 
+function updateSummaryMetrics(m) {
+  const decision = m.decision || '—';
+  const riskRating = m.risk_rating || '—';
+  const low = m.implied_valuation_range_usd_m?.low;
+  const high = m.implied_valuation_range_usd_m?.high;
+  const confs = Object.values(m.completed_agents || {}).map(a => a.confidence).filter(c => typeof c === 'number');
+  const avgConf = confs.length ? Math.round(confs.reduce((a,b)=>a+b,0)/confs.length*100) : null;
+
+  const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+  el('results-title', m.buyer_company && m.target_company ? `${m.buyer_company} → ${m.target_company}` : 'Results');
+  el('results-meta', `Assessment ID: ${m.assessment_id || currentAssessmentId} · ${Object.keys(m.completed_agents||{}).length} agents`);
+
+  const decEl = document.getElementById('sum-decision');
+  if (decEl && decision !== '—') {
+    decEl.textContent = decision.replace('_','-');
+    decEl.style.color = decision === 'GO' ? 'var(--success)' : decision === 'NO_GO' ? 'var(--error)' : 'var(--warning)';
+  }
+  const riskEl = document.getElementById('sum-risk');
+  if (riskEl && riskRating !== '—') {
+    riskEl.textContent = riskRating;
+    riskEl.style.color = riskRating === 'RED' ? 'var(--error)' : riskRating === 'AMBER' ? 'var(--warning)' : 'var(--success)';
+  }
+  if (low && high) {
+    el('sum-val', `$${(low/1000).toFixed(0)}B–$${(high/1000).toFixed(0)}B`);
+    el('sum-val-sub', `EV/EBITDA range`);
+  }
+  if (avgConf !== null) el('sum-conf', avgConf + '%');
+
+  const statusBadge = document.getElementById('results-status-badge');
+  if (statusBadge) {
+    const s = m.overall_status || 'COMPLETE';
+    statusBadge.textContent = '● ' + s.replace('_',' ');
+    statusBadge.className = 'badge ' + (s === 'COMPLETE' ? 'b-green' : 'b-red');
+  }
+}
+
+// ── Tab management ────────────────────────────────────────────────────────
 function addToTab(tabIdx, agentId, content) {
   if (!tabContents[tabIdx]) tabContents[tabIdx] = [];
   tabContents[tabIdx].push({ agentId, content });
@@ -516,118 +824,121 @@ function addToTab(tabIdx, agentId, content) {
 function ensureAllTabsExist() {
   const tabsBar = document.getElementById('tabs-bar');
   const tabsContent = document.getElementById('tabs-content');
-  show('results-section');
   TAB_DEFS.forEach((tabDef, tabIdx) => {
     if (document.getElementById(tabDef.id + '-btn')) return;
     const btn = document.createElement('button');
-    btn.className = 'tab'; btn.id = tabDef.id + '-btn';
+    btn.className = 'tab-pill'; btn.id = tabDef.id + '-btn';
     btn.textContent = tabDef.label;
     btn.onclick = () => activateTab(tabIdx);
     tabsBar.appendChild(btn);
     const pane = document.createElement('div');
-    pane.className = 'tab-content'; pane.id = tabDef.id + '-pane';
+    pane.className = 'tab-pane'; pane.id = tabDef.id + '-pane';
     tabsContent.appendChild(pane);
   });
-  if (!document.querySelector('#tabs-bar .tab.active')) activateTab(0);
+  if (!document.querySelector('#tabs-bar .tab-pill.active')) activateTab(0);
 }
 
 function renderTabPane(tabIdx) {
   ensureAllTabsExist();
   const tabDef = TAB_DEFS[tabIdx];
   const pane = document.getElementById(tabDef.id + '-pane');
-  const items = tabContents[tabIdx] || [];
+  const items = (tabContents[tabIdx] || []).slice().sort((a, b) => {
+    const ai = tabDef.agents.indexOf(a.agentId);
+    const bi = tabDef.agents.indexOf(b.agentId);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
 
   let html = '';
   for (let i = 0; i < items.length; i++) {
     if (i > 0) html += '<hr class="section-divider">';
     html += renderAgentSection(tabDef.type, items[i].agentId, items[i].content, tabIdx);
   }
-  html += renderTabNav(tabIdx);
   pane.innerHTML = html;
-
-  // Re-init charts in pane
   initChartsInPane(pane, items, tabDef.type);
 }
 
-// ── Per-agent section renderer ────────────────────────────────────────────────
+// ── Per-agent renderer ─────────────────────────────────────────────────────
 function renderAgentSection(tabType, agentId, rawContent, tabIdx) {
   const { title, confidence, mainContent } = parseAgentHeader(rawContent);
+  const icon = AGENT_ICONS[agentId] || '🤖';
+
+  if (tabType === 'deal') return renderDeal(mainContent, title, confidence, icon);
 
   let body = '';
-  if (tabType === 'sell' && agentId === 'country-agent') {
-    body = renderSellCountry(mainContent);
-  } else if (tabType === 'sell' && agentId === 'sector-agent') {
-    body = renderSellSector(mainContent);
-  } else if ((tabType === 'sell' && agentId === 'company-agent') || (tabType === 'buy' && agentId === 'buyer-company-agent')) {
-    body = renderCompany(mainContent);
-  } else if (tabType === 'risk') {
-    body = renderRisk(mainContent);
-  } else if (tabType === 'deal') {
-    return renderDeal(mainContent, title, confidence);
-  } else {
-    body = renderGeneric(mainContent);
-  }
+  let extraBadge = '';
 
-  return `
-    <div class="agent-section">
-      <div class="agent-section-header">
-        <div class="agent-section-title">${escHtml(title)}</div>
-        ${confidence ? `<span class="confidence-badge">Confidence: ${escHtml(confidence)}</span>` : ''}
+  if (agentId === 'seller-country-agent' || agentId === 'country-agent')        body = renderSellCountry(mainContent);
+  else if (agentId === 'seller-sector-agent' || agentId === 'sector-agent')    body = renderSellSector(mainContent);
+  else if (agentId === 'seller-company-agent' || agentId === 'company-agent' || agentId === 'buyer-company-agent') body = renderCompany(mainContent);
+  else if (agentId === 'buyer-country-agent') body = renderBuyCountry(mainContent);
+  else if (agentId === 'buyer-sector-agent')  body = renderBuySector(mainContent);
+  else if (tabType === 'risk') {
+    body = renderRisk(mainContent);
+    const ratingM = rawContent.match(/Overall Risk Rating.*?(RED|AMBER|GREEN)/i);
+    if (ratingM) {
+      const rating = ratingM[1].toUpperCase();
+      const clsMap = { RED: 'b-red', AMBER: 'b-gold', GREEN: 'b-green' };
+      const emojiMap = { RED: '🔴', AMBER: '🟡', GREEN: '🟢' };
+      extraBadge = `<span class="badge ${clsMap[rating]}" style="font-size:13px;padding:6px 14px">${emojiMap[rating]} ${rating}</span>`;
+    }
+  }
+  else body = renderGeneric(mainContent);
+
+  return `<div>
+    <div class="section-hd">
+      <div class="section-title">${icon} ${escHtml(title)}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${extraBadge}
+        ${confidence ? `<div class="conf-pill">✦ Confidence: ${escHtml(confidence)}</div>` : ''}
       </div>
-      ${body}
-    </div>`;
+    </div>
+    ${body}
+  </div>`;
 }
 
-// ── Header parser ──────────────────────────────────────────────────────────────
+// ── Header parser ─────────────────────────────────────────────────────────
 function parseAgentHeader(raw) {
   const lines = raw.split('\n');
-  let title = '', confidence = '';
-  let inMetaTable = false, metaEnd = 0;
+  let title = '', confidence = '', inMetaTable = false, metaEnd = 0;
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i].trim();
-    if (l.startsWith('# ') && !title) { title = l.slice(2).trim(); continue; }
-    if (l.startsWith('## ') && !title) { title = l.slice(3).trim(); continue; }
+    if ((l.startsWith('# ') || l.startsWith('## ')) && !title) {
+      title = l.replace(/^#{1,2}\s+/, '').trim(); continue;
+    }
     if (l.match(/^\|.*Key.*\|.*Value.*\|/i)) { inMetaTable = true; continue; }
     if (inMetaTable && l.startsWith('|')) {
       const m = l.match(/\|\s*confidence\s*\|\s*([^|]+)\|/i);
       if (m) confidence = m[1].trim();
       metaEnd = i; continue;
     }
-    if (inMetaTable && !l.startsWith('|')) { inMetaTable = false; }
+    if (inMetaTable && !l.startsWith('|')) inMetaTable = false;
     if (l === '---') { metaEnd = i; break; }
   }
   const mainContent = lines.slice(metaEnd + 1).join('\n').trim();
   return { title, confidence, mainContent };
 }
 
-// ── Section parsers ───────────────────────────────────────────────────────────
+// ── Section parsers ────────────────────────────────────────────────────────
 function parseSections(text) {
-  const sections = [];
-  const re = /^###\s+(.+)$/gm;
-  let match, prev = null;
+  const sections = []; const re = /^###\s+(.+)$/gm; let match, prev = null;
   while ((match = re.exec(text)) !== null) {
-    if (prev) {
-      sections.push({ heading: prev.heading, content: text.slice(prev.end, match.index).trim() });
-    }
+    if (prev) sections.push({ heading: prev.heading, content: text.slice(prev.end, match.index).trim() });
     prev = { heading: match[1].trim(), end: match.index + match[0].length };
   }
   if (prev) sections.push({ heading: prev.heading, content: text.slice(prev.end).trim() });
   return sections;
 }
-
 function parseListItems(text) {
-  return text.split('\n').filter(l => l.trim().startsWith('-')).map(l => l.replace(/^-\s*/, '').trim());
+  return text.split('\n').filter(l => l.trim().match(/^[-*]/)).map(l => l.replace(/^[-*]\s*/, '').trim()).filter(Boolean);
 }
-
 function parseYearValues(text) {
   const items = [];
   for (const l of text.split('\n')) {
-    const m = l.match(/[-*]\s*(\d{4})\s*:\s*([\d.,-]+)/);
-    if (m) items.push({ year: parseInt(m[1]), value: parseFloat(m[2].replace(',','')) });
+    const m = l.match(/[-*]\s*(\d{4})\s*:\s*([-\d.]+)/);
+    if (m) items.push({ year: parseInt(m[1]), value: parseFloat(m[2]) });
   }
   return items;
 }
-
 function parsePlayerShares(text) {
   const labels = [], values = [];
   for (const l of text.split('\n')) {
@@ -637,227 +948,726 @@ function parsePlayerShares(text) {
   return { labels, values };
 }
 
-// ── Sell Side Country ──────────────────────────────────────────────────────────
+// ── Sell Side Country ─────────────────────────────────────────────────────
 function renderSellCountry(content) {
-  const sections = parseSections(content);
-  let html = '';
-  const chartSections = ['GDP Growth', 'Inflation Rate', 'Currency Exchange'];
-  const skipH2 = true;
+  const clean = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+  const CHART_KEYS = ['GDP Growth', 'Inflation Rate', 'Currency Exchange'];
+  const colorMap = { 'GDP Growth': '#7c3aed', 'Inflation Rate': '#ef4444', 'Currency Exchange': '#f59e0b' };
 
-  // Strip leading h2/status line
-  const cleanContent = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+  const chartSecs = [], macro = {}, misc = {};
+  let repatriation = '', riskFlags = [], narrative = '', sources = [];
 
-  for (const sec of parseSections(cleanContent)) {
+  for (const sec of parseSections(clean)) {
     const h = sec.heading;
-    if (h.includes('Data Sources')) {
-      html += renderDataSources(parseListItems(sec.content));
-    } else if (h.includes('GDP Growth') || h.includes('Inflation Rate') || h.includes('Currency Exchange')) {
-      html += `<div class="chart-card" data-chart-type="line" data-chart-section="${escHtml(h)}" data-chart-data="${escHtml(sec.content)}">
-        <div class="chart-card-title">${escHtml(h)}</div>
-        <div class="chart-summary" id="chart-summary-${slugify(h)}"></div>
-        <div class="chart-wrap"><canvas id="chart-${slugify(h)}"></canvas></div>
-      </div>`;
-    } else {
-      html += `<div class="card">
-        <div class="card-title"><span class="dot"></span>${escHtml(h)}</div>
-        <div class="card-body">${marked.parse(sec.content)}</div>
-      </div>`;
-    }
+    if (CHART_KEYS.some(k => h.includes(k)))       chartSecs.push(sec);
+    else if (h.includes('Corporate Tax'))           macro.tax = sec.content.trim();
+    else if (h.includes('Political Stability'))     macro.stability = sec.content.trim();
+    else if (h.includes('Ease of Doing Business'))  macro.ease = sec.content.trim();
+    else if (h.includes('Currency & Capital') || h.includes('Capital Repatriation')) repatriation = sec.content;
+    else if (h.includes('Risk Flags'))              riskFlags = parseListItems(sec.content);
+    else if (h.includes('Narrative Summary'))       narrative = sec.content;
+    else if (h.includes('Data Sources'))            sources = parseListItems(sec.content);
+    else misc[h] = sec.content;
   }
-  return html;
-}
 
-// ── Sell Side Sector ──────────────────────────────────────────────────────────
-function renderSellSector(content) {
-  const cleanContent = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
   let html = '';
-  for (const sec of parseSections(cleanContent)) {
-    const h = sec.heading;
-    if (h.includes('Data Sources')) {
-      html += renderDataSources(parseListItems(sec.content));
-    } else if (h === 'Market Overview') {
-      html += renderSectorMarketOverview(sec.content);
-    } else {
-      html += `<div class="card">
-        <div class="card-title"><span class="dot"></span>${escHtml(h)}</div>
-        <div class="card-body">${marked.parse(sec.content)}</div>
+
+  // 3 chart cards in g3
+  if (chartSecs.length) {
+    html += '<div class="g3" style="margin-bottom:16px">';
+    for (const sec of chartSecs) {
+      const color = Object.entries(colorMap).find(([k]) => sec.heading.includes(k))?.[1] || '#7c3aed';
+      html += `<div class="chart-card" data-chart-type="line" data-chart-color="${color}" data-chart-section="${escAttr(sec.heading)}" data-chart-data="${escAttr(sec.content)}">
+        <div class="chart-card-title">${escHtml(sec.heading)}</div>
+        <div class="chart-card-sub" id="chart-sub-${slugify(sec.heading)}">2020–2024 trend</div>
+        <div class="chart-wrap"><canvas id="chart-${slugify(sec.heading)}"></canvas></div>
       </div>`;
     }
+    html += '</div>';
   }
-  return html;
-}
 
-function renderSectorMarketOverview(content) {
-  // Split sub-sections (####)
-  const subSections = [];
-  const re = /^####\s+(.+)$/gm;
-  let match, prev = null;
-  while ((match = re.exec(content)) !== null) {
-    if (prev) subSections.push({ heading: prev.h, content: content.slice(prev.end, match.index).trim() });
-    prev = { h: match[1].trim(), end: match.index + match[0].length };
-  }
-  if (prev) subSections.push({ heading: prev.h, content: content.slice(prev.end).trim() });
-  const mainContent = prev ? content.slice(0, content.indexOf('\n####')).trim() : content;
+  // g2: Macro Indicators + (Repatriation + Risk Flags)
+  html += '<div class="g2" style="margin-bottom:16px">';
 
-  let html = `<div class="card">
-    <div class="card-title"><span class="dot"></span>Market Overview</div>
-    <div class="card-body">${marked.parse(mainContent)}</div>`;
-
-  for (const sub of subSections) {
-    if (sub.heading.includes('Market Size History')) {
-      html += `<div class="chart-card" style="margin-top:12px" data-chart-type="bar" data-chart-section="${escHtml(sub.heading)}" data-chart-data="${escHtml(sub.content)}">
-        <div class="chart-card-title">${escHtml(sub.heading)}</div>
-        <div class="chart-wrap"><canvas id="chart-${slugify(sub.heading)}"></canvas></div>
-      </div>`;
-    } else if (sub.heading.includes('Market Share')) {
-      html += `<div class="chart-card" style="margin-top:12px" data-chart-type="pie" data-chart-section="${escHtml(sub.heading)}" data-chart-data="${escHtml(sub.content)}">
-        <div class="chart-card-title">${escHtml(sub.heading)}</div>
-        <div class="pie-wrap"><canvas id="chart-${slugify(sub.heading)}"></canvas></div>
-      </div>`;
-    } else {
-      html += `<div style="margin-top:10px"><div class="card-title" style="margin-top:8px"><span class="dot"></span>${escHtml(sub.heading)}</div>
-        <div class="card-body">${marked.parse(sub.content)}</div></div>`;
+  // Macro Indicators card
+  const macroRows = [
+    macro.stability && { lbl: 'Political Stability', val: macro.stability },
+    macro.ease      && { lbl: 'Ease of Business',    val: macro.ease },
+    macro.tax       && { lbl: 'Corporate Tax Rate',  val: macro.tax },
+  ].filter(Boolean);
+  if (macroRows.length) {
+    html += '<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Macro Indicators (Latest)</div>';
+    for (const row of macroRows) {
+      html += `<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">${escHtml(row.lbl)}</span><span style="font-weight:700">${escHtml(row.val)}</span></div>`;
     }
+    html += '</div>';
+  }
+
+  // Capital Repatriation + Risk Flags
+  html += `<div class="card card-sm">
+    <div class="card-title"><span class="card-title-dot"></span>Capital Repatriation &amp; FX</div>
+    <div class="narrative">${escHtml(repatriation)}</div>`;
+  if (riskFlags.length) {
+    html += '<div style="margin-top:14px"><div class="card-title" style="margin-bottom:10px"><span class="card-title-dot"></span>Risk Flags</div>';
+    for (const f of riskFlags) html += `<div class="flag-item"><span class="flag-icon">⚠</span>${escHtml(f)}</div>`;
+    html += '</div>';
   }
   html += '</div>';
-  return html;
-}
+  html += '</div>'; // close g2
 
-// ── Company ───────────────────────────────────────────────────────────────────
-function renderCompany(content) {
-  const cleanContent = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
-  let html = '';
-  for (const sec of parseSections(cleanContent)) {
-    const h = sec.heading;
-    if (h.includes('Data Sources')) {
-      html += renderDataSources(parseListItems(sec.content));
-    } else if (h.includes('Financials')) {
-      html += renderFinancialsTable(sec.content, h);
-    } else {
-      html += `<div class="card">
-        <div class="card-title"><span class="dot"></span>${escHtml(h)}</div>
-        <div class="card-body">${marked.parse(sec.content)}</div>
-      </div>`;
-    }
-  }
-  return html;
-}
-
-function renderFinancialsTable(content, heading) {
-  // Try to parse as markdown table
-  const rows = content.split('\n').filter(l => l.includes('|'));
-  if (rows.length < 2) return `<div class="card"><div class="card-title"><span class="dot"></span>${escHtml(heading)}</div><div class="card-body">${marked.parse(content)}</div></div>`;
-
-  const headers = rows[0].split('|').map(c => c.trim()).filter(Boolean);
-  const dataRows = rows.slice(2).map(r => r.split('|').map(c => c.trim()).filter(Boolean));
-
-  let tableHtml = `<div class="fin-table-wrap"><table class="fin-table"><thead><tr>`;
-  for (const h of headers) tableHtml += `<th>${escHtml(h)}</th>`;
-  tableHtml += '</tr></thead><tbody>';
-  for (const row of dataRows) {
-    tableHtml += '<tr>';
-    for (const cell of row) tableHtml += `<td>${escHtml(cell)}</td>`;
-    tableHtml += '</tr>';
-  }
-  tableHtml += '</tbody></table></div>';
-
-  return `<div class="card">
-    <div class="card-title"><span class="dot"></span>${escHtml(heading)}</div>
-    ${tableHtml}
-  </div>`;
-}
-
-// ── Generic (buy-side country/sector) ─────────────────────────────────────────
-function renderGeneric(content) {
-  const cleanContent = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
-  let html = '';
-  for (const sec of parseSections(cleanContent)) {
-    const h = sec.heading;
-    if (h.includes('Data Sources')) {
-      html += renderDataSources(parseListItems(sec.content));
-    } else {
-      html += `<div class="card">
-        <div class="card-title"><span class="dot"></span>${escHtml(h)}</div>
-        <div class="card-body">${marked.parse(sec.content)}</div>
-      </div>`;
-    }
-  }
-  if (!html) html = `<div class="card"><div class="card-body md-content">${marked.parse(cleanContent)}</div></div>`;
-  return html;
-}
-
-// ── Risk Tab ──────────────────────────────────────────────────────────────────
-function renderRisk(content) {
-  const cleanContent = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
-  const sections = parseSections(cleanContent);
-
-  let overall = '', risks = [], insights = [], sources = [];
-  for (const sec of sections) {
-    const h = sec.heading.toLowerCase();
-    if (h === 'risk assessment') {
-      overall = sec.content;
-    } else if (h === 'risk details') {
-      risks = parseRiskDetails(sec.content);
-    } else if (h === 'cross-workstream insights') {
-      insights = parseListItems(sec.content);
-    } else if (h.includes('data sources')) {
-      sources = parseListItems(sec.content);
-    } else if (h === 'risk matrix') {
-      risks = parseRiskMatrix(sec.content, risks);
-    }
-  }
-
-  let html = '';
-
-  // Overall rating banner
-  if (overall) {
-    const ratingM = overall.match(/Overall Risk Rating.*?(RED|AMBER|GREEN)/i);
-    const rating = ratingM ? ratingM[1].toUpperCase() : '';
-    const ratingColors = { RED: 'var(--error)', AMBER: 'var(--warning)', GREEN: 'var(--success)' };
-    const ratingBg = { RED: 'rgba(239,68,68,0.1)', AMBER: 'rgba(245,158,11,0.1)', GREEN: 'rgba(34,197,94,0.1)' };
-    if (rating) {
-      html += `<div class="card" style="border-color:${ratingColors[rating]}; background:${ratingBg[rating]}; text-align:center; padding:20px;">
-        <div style="font-size:28px; font-weight:800; color:${ratingColors[rating]};">${rating === 'RED' ? '🔴' : rating === 'AMBER' ? '🟡' : '🟢'} ${rating}</div>
-        <div style="color:var(--muted); font-size:14px; margin-top:4px;">Overall Risk Rating</div>
-      </div>`;
-    }
-  }
-
-  if (risks.length) {
-    for (const r of risks) {
-      html += renderRiskCard(r);
-    }
-  }
-
-  if (insights.length) {
-    html += `<div class="card">
-      <div class="card-title"><span class="dot"></span>Cross-Workstream Insights</div>
-      <div class="card-body"><ul>${insights.map(i => `<li>${escHtml(i)}</li>`).join('')}</ul></div>
+  // Narrative
+  if (narrative) {
+    html += `<div class="card card-sm" style="margin-bottom:16px">
+      <div class="card-title"><span class="card-title-dot"></span>Narrative Summary</div>
+      <div class="narrative">${escHtml(narrative)}</div>
     </div>`;
   }
 
   if (sources.length) html += renderDataSources(sources);
-  if (!html) html = `<div class="card"><div class="card-body md-content">${marked.parse(cleanContent)}</div></div>`;
   return html;
 }
 
-function parseRiskMatrix(matrixContent, existing) {
+// ── Sell Side Sector ──────────────────────────────────────────────────────
+function renderSellSector(content) {
+  const clean = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+
+  let marketOverviewMain = '', marketSizeHistory = '', marketShareData = '';
+  let sectorKPIs = {}, riskAssessment = {}, keyRegs = [], riskFlags = [], narrative = '', sources = [];
+
+  for (const sec of parseSections(clean)) {
+    const h = sec.heading;
+    if (h === 'Market Overview') {
+      // Extract #### subsections
+      const subRe = /^####\s+(.+)$/gm; let m, prev = null;
+      while ((m = subRe.exec(sec.content)) !== null) {
+        if (prev) {
+          const sub = sec.content.slice(prev.end, m.index).trim();
+          if (prev.h.includes('Market Size History')) marketSizeHistory = sub;
+          else if (prev.h.includes('Market Share')) marketShareData = sub;
+        }
+        prev = { h: m[1].trim(), end: m.index + m[0].length };
+      }
+      if (prev) {
+        const sub = sec.content.slice(prev.end).trim();
+        if (prev.h.includes('Market Size History')) marketSizeHistory = sub;
+        else if (prev.h.includes('Market Share')) marketShareData = sub;
+      }
+      const firstSub = sec.content.indexOf('\n####');
+      marketOverviewMain = firstSub > 0 ? sec.content.slice(0, firstSub).trim() : sec.content;
+    } else if (h === 'Risk Assessment') {
+      riskAssessment = kvList(sec.content);
+      // also grab non-KV text as risk flags
+      for (const l of sec.content.split('\n')) {
+        const t = l.replace(/^[-*]\s*/,'').trim();
+        if (t && !t.match(/^\*\*.+\*\*:\s*\S+$/)) riskFlags.push(t);
+      }
+    } else if (h === 'Sector KPIs') { sectorKPIs = kvList(sec.content); }
+    else if (h === 'Key Regulations') { keyRegs = parseListItems(sec.content); }
+    else if (h === 'Risk Flags') { riskFlags.push(...parseListItems(sec.content)); }
+    else if (h === 'Narrative Summary') { narrative = sec.content; }
+    else if (h === 'Data Sources') { sources = parseListItems(sec.content); }
+  }
+
+  const ovKv = kvList(marketOverviewMain);
+  const mktSizeLatest = ovKv['Market Size (Latest)'] || ovKv['Market Size'] || '—';
+  const growthRate   = ovKv['Growth Rate'] || '—';
+  const majorPlayers = ovKv['Major Players'] || '—';
+  const top3Str      = ovKv['Top 3'] || '';
+  const regRisk   = riskAssessment['Regulatory Risk'] || ovKv['Regulatory Risk'] || '—';
+  const techRisk  = riskAssessment['Technology Disruption Risk'] || riskAssessment['Tech Disruption Risk'] || '—';
+
+  // Top 3 from overview or market share lines
+  let top3 = top3Str ? top3Str.split(',').map(s => s.trim()) : [];
+  if (!top3.length && marketShareData) {
+    top3 = marketShareData.split('\n').filter(l => l.match(/[-*]\s*.+:\s*[\d.]+/)).slice(0, 3)
+      .map(l => {
+        const m = l.match(/[-*]\s*(.+?):\s*([\d.]+)/);
+        return m ? `${m[1].trim()} — ${m[2]}%` : l.replace(/^[-*]\s*/,'').trim();
+      });
+  }
+
+  const badgeCls = v => v === 'LOW' ? 'b-green' : v === 'HIGH' ? 'b-red' : 'b-gold';
+
+  let html = '';
+
+  // g2: bar chart + pie chart
+  if (marketSizeHistory || marketShareData) {
+    html += '<div class="g2" style="margin-bottom:16px">';
+    if (marketSizeHistory) {
+      html += `<div class="chart-card" data-chart-type="bar" data-chart-color="#7c3aed" data-chart-section="Market Size History" data-chart-data="${escAttr(marketSizeHistory)}">
+        <div class="chart-card-title">Market Size Evolution (5-Year)</div>
+        <div class="chart-card-sub">USD billions</div>
+        <div class="chart-wrap-lg"><canvas id="chart-market-size-history"></canvas></div>
+      </div>`;
+    }
+    if (marketShareData) {
+      html += `<div class="chart-card" data-chart-type="pie" data-chart-section="Market Share" data-chart-data="${escAttr(marketShareData)}">
+        <div class="chart-card-title">Market Share (%)</div>
+        <div class="chart-card-sub">2024 — Market Leaders</div>
+        <div class="pie-wrap"><canvas id="chart-market-share-pie"></canvas></div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  // g3: Market Overview KPIs + Sector KPIs + Risk Assessment
+  html += '<div class="g3" style="margin-bottom:16px">';
+  html += `<div class="card card-sm">
+    <div class="card-title"><span class="card-title-dot"></span>Market Overview</div>
+    <div class="g2" style="gap:10px">
+      <div class="kpi"><div class="kpi-lbl">Market Size</div><div class="kpi-val kpi-purple">${escHtml(mktSizeLatest)}</div><div class="kpi-sub">2024</div></div>
+      <div class="kpi"><div class="kpi-lbl">Growth Rate</div><div class="kpi-val kpi-green">${escHtml(growthRate)}</div><div class="kpi-sub">p.a.</div></div>
+      <div class="kpi"><div class="kpi-lbl">Major Players</div><div class="kpi-val">${escHtml(majorPlayers)}</div></div>
+      <div class="kpi"><div class="kpi-lbl">Regulatory Risk</div><div class="kpi-val kpi-gold">${escHtml(regRisk)}</div></div>
+    </div>
+  </div>`;
+  const kpiKeys = Object.keys(sectorKPIs);
+  if (kpiKeys.length) {
+    html += `<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Sector KPIs</div><div style="display:flex;flex-direction:column;gap:0">`;
+    kpiKeys.forEach((k, i) => {
+      const border = i < kpiKeys.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
+      html += `<div style="display:flex;justify-content:space-between;padding:8px 0;${border}font-size:13px"><span style="color:var(--muted)">${escHtml(humanizeKpiLabel(k))}</span><span style="font-weight:700">${escHtml(String(sectorKPIs[k]))}</span></div>`;
+    });
+    html += '</div></div>';
+  } else {
+    html += `<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Sector KPIs</div><div style="color:var(--muted);font-size:13px;padding:8px 0">No KPI data available</div></div>`;
+  }
+  html += `<div class="card card-sm">
+    <div class="card-title"><span class="card-title-dot"></span>Risk Assessment</div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Regulatory Risk</span><span class="badge ${badgeCls(regRisk)}">${escHtml(regRisk)}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px"><span style="color:var(--muted)">Tech Disruption</span><span class="badge ${badgeCls(techRisk)}">${escHtml(techRisk)}</span></div>
+  </div>`;
+  html += '</div>'; // close g3
+
+  // g2: Top 3 + Key Regulations
+  if (top3.length || keyRegs.length) {
+    html += '<div class="g2" style="margin-bottom:16px">';
+    if (top3.length) {
+      html += '<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Top Players</div>';
+      top3.forEach((p, i) => { html += `<div class="list-row"><span class="list-arrow">${i+1}</span>${escHtml(p)}</div>`; });
+      html += '</div>';
+    }
+    if (keyRegs.length) {
+      html += '<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Key Regulations</div>';
+      for (const r of keyRegs) html += `<div class="list-row"><span class="list-arrow">→</span>${escHtml(r)}</div>`;
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  // Risk Flags
+  const uniqueFlags = [...new Set(riskFlags)];
+  if (uniqueFlags.length) {
+    html += '<div class="card card-sm" style="margin-bottom:16px"><div class="card-title"><span class="card-title-dot"></span>Risk Flags</div>';
+    for (const f of uniqueFlags) html += `<div class="flag-item"><span class="flag-icon">⚠</span>${escHtml(f)}</div>`;
+    html += '</div>';
+  }
+
+  if (narrative) {
+    html += `<div class="card card-sm" style="margin-bottom:16px">
+      <div class="card-title"><span class="card-title-dot"></span>Narrative Summary</div>
+      <div class="narrative">${escHtml(narrative)}</div>
+    </div>`;
+  }
+  if (sources.length) html += renderDataSources(sources);
+  return html;
+}
+
+// ── Company ───────────────────────────────────────────────────────────────
+function renderCompany(content) {
+  const clean = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+
+  let finContent = '', acqContent = '', mgmtContent = '', shareholdersContent = '', companyOverview = '';
+  let opKPIs = {}, stratPriorities = [], prevAcq = [], recentMoves = [], riskFlags = [], narrative = '', sources = [];
+
+  for (const sec of parseSections(clean)) {
+    const h = sec.heading;
+    if (h.includes('Company Overview'))          companyOverview = sec.content;
+    else if (h.includes('Financials'))           finContent = sec.content;
+    else if (h.includes('Acquisition Capacity')) acqContent = sec.content;
+    else if (h.includes('Management Quality'))   mgmtContent = sec.content;
+    else if (h.includes('Key Shareholders'))     shareholdersContent = sec.content;
+    else if (h.includes('Operational KPIs'))     opKPIs = kvList(sec.content);
+    else if (h.includes('Strategic Priorities')) stratPriorities = parseListItems(sec.content);
+    else if (h.includes('Previous Acquisitions')) prevAcq = parseListItems(sec.content);
+    else if (h.includes('Recent Strategic Moves')) recentMoves = parseListItems(sec.content);
+    else if (h.includes('Risk') && !h.includes('Assessment')) riskFlags = parseListItems(sec.content);
+    else if (h.includes('Narrative Summary')) narrative = sec.content;
+    else if (h.includes('Data Sources'))     sources = parseListItems(sec.content);
+  }
+
+  // Parse financials table
+  const { headers: finHeaders, data: finData } = parseFinRows(finContent);
+  const latest = finData.length ? finData[finData.length - 1] : null;
+
+  function fmtUSDm(v) {
+    const n = parseFloat(String(v).replace(/[^-\d.]/g,''));
+    if (isNaN(n)) return v;
+    const abs = Math.abs(n);
+    const sign = n < 0 ? '-' : '';
+    return abs >= 1000 ? `${sign}$${(abs/1000).toFixed(1)}B` : `${sign}$${abs}M`;
+  }
+  function fmtPct(v) {
+    const n = parseFloat(String(v).replace(/[^-\d.]/g,''));
+    if (isNaN(n)) return v;
+    return (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
+  }
+
+  let html = '';
+
+  // ── Row 1: Company Overview (2/3) + Key Shareholders (1/3), or standalone cards ──
+  function renderShareholdersCard() {
+    if (!shareholdersContent) return '';
+    const shLines = shareholdersContent.split('\n').filter(l => l.trim().match(/^[-*]/));
+    let out = '<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Key Shareholders</div>';
+    for (const l of shLines) {
+      const m = l.match(/[-*]\s*(.+?):\s*([\d.]+)%?\s*(?:\((.+?)\))?/);
+      if (m) {
+        const name = m[1].trim(), pct = parseFloat(m[2]), type = m[3] || '';
+        out += `<div class="bar-row">
+          <span class="bar-name" style="min-width:90px">${escHtml(name)}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.min(pct,100)}%"></div></div>
+          <span class="bar-pct">${pct}%</span>
+          <span class="bar-type">${escHtml(type)}</span>
+        </div>`;
+      }
+    }
+    return out + '</div>';
+  }
+
+  if (companyOverview && shareholdersContent) {
+    html += '<div class="g-2-1" style="margin-bottom:16px">';
+    const ovItems = parseListItems(companyOverview);
+    html += '<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Company Overview</div>';
+    if (ovItems.length) {
+      for (const item of ovItems) html += `<div class="list-row"><span class="list-arrow">›</span>${escHtml(item)}</div>`;
+    } else {
+      html += `<div class="narrative">${escHtml(companyOverview)}</div>`;
+    }
+    html += '</div>';
+    html += renderShareholdersCard();
+    html += '</div>';
+  } else if (companyOverview) {
+    const ovItems = parseListItems(companyOverview);
+    html += '<div class="card card-sm" style="margin-bottom:16px"><div class="card-title"><span class="card-title-dot"></span>Company Overview</div>';
+    if (ovItems.length) {
+      for (const item of ovItems) html += `<div class="list-row"><span class="list-arrow">›</span>${escHtml(item)}</div>`;
+    } else {
+      html += `<div class="narrative">${escHtml(companyOverview)}</div>`;
+    }
+    html += '</div>';
+    if (shareholdersContent) html += renderShareholdersCard();
+  } else if (shareholdersContent) {
+    html += renderShareholdersCard();
+  }
+
+  // ── Row 2: Key Financial Metrics + Operational KPIs side by side ──
+  const opKeys = Object.keys(opKPIs);
+  if (latest || opKeys.length) {
+    html += '<div class="g2" style="margin-bottom:16px">';
+    if (latest) {
+      const rev    = fmtUSDm(latest['Revenue (USDm)'] || latest['Revenue'] || '');
+      const ebitda = fmtUSDm(latest['EBITDA (USDm)'] || latest['EBITDA'] || '');
+      const revG   = fmtPct(latest['Rev Growth %'] || latest['Rev Growth'] || '');
+      const netDebt= fmtUSDm(latest['Net Debt (USDm)'] || latest['Net Debt'] || '');
+      const capex  = fmtUSDm(latest['CapEx (USDm)'] || latest['CapEx'] || '');
+      const netPro = fmtUSDm(latest['Net Profit (USDm)'] || latest['Net Profit'] || '');
+      const ebitdaPct = latest['EBITDA %'] || latest['EBITDA%'] || '';
+      const npPct  = latest['NP %'] || latest['NP%'] || '';
+      const yr = latest['Year'] || '';
+      const revGNum = parseFloat(String(revG).replace(/[^-\d.]/g,''));
+      const npNum = parseFloat(String(netPro).replace(/[^-\d$B]/g,'').replace('B',''));
+      html += `<div class="card card-sm">
+        <div class="card-title"><span class="card-title-dot"></span>Key Financial Metrics (FY${escHtml(yr)})</div>
+        <div class="g2" style="gap:10px">
+          <div class="kpi"><div class="kpi-lbl">Revenue</div><div class="kpi-val kpi-purple">${escHtml(rev)}</div><div class="kpi-sub">USD millions</div></div>
+          <div class="kpi"><div class="kpi-lbl">EBITDA</div><div class="kpi-val kpi-green">${escHtml(ebitda)}</div><div class="kpi-sub">${escHtml(ebitdaPct)}% margin</div></div>
+          <div class="kpi"><div class="kpi-lbl">Revenue Growth</div><div class="kpi-val ${revGNum >= 0 ? 'kpi-green' : 'kpi-red'}">${escHtml(revG)}</div><div class="kpi-sub">YoY</div></div>
+          <div class="kpi"><div class="kpi-lbl">Net Debt</div><div class="kpi-val kpi-red">${escHtml(netDebt)}</div></div>
+          <div class="kpi"><div class="kpi-lbl">CapEx</div><div class="kpi-val">${escHtml(capex)}</div></div>
+          <div class="kpi"><div class="kpi-lbl">Net Profit</div><div class="kpi-val ${npNum < 0 ? 'kpi-red' : 'kpi-green'}">${escHtml(netPro)}</div><div class="kpi-sub">${escHtml(npPct)}% margin</div></div>
+        </div>
+      </div>`;
+    }
+    if (opKeys.length) {
+      html += '<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Operational KPIs</div>';
+      html += `<div class="g2" style="gap:10px">`;
+      for (const k of opKeys) {
+        const lbl = humanizeKpiLabel(k);
+        html += `<div class="kpi"><div class="kpi-lbl">${escHtml(lbl)}</div><div class="kpi-val kpi-purple">${escHtml(String(opKPIs[k]))}</div></div>`;
+      }
+      html += '</div></div>';
+    }
+    html += '</div>';
+  }
+
+  // ── Row 3: Management Quality ──
+  if (mgmtContent) {
+    const scoreM = mgmtContent.match(/([\d.]+)\s*\/\s*10/);
+    const score  = scoreM ? scoreM[1] : '';
+    html += `<div class="card card-sm" style="margin-bottom:16px">
+      <div class="card-title"><span class="card-title-dot"></span>Management Quality</div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="font-size:42px;font-weight:900;color:var(--purple)">${escHtml(score || '—')}</div>
+        <div><div style="font-size:13px;color:var(--muted)">/10</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Assessed management quality score</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ── Row 4: Strategic Priorities + Recent Strategic Moves side by side ──
+  if (stratPriorities.length || recentMoves.length) {
+    html += '<div class="g2" style="margin-bottom:16px">';
+    if (stratPriorities.length) {
+      html += '<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Strategic Priorities</div>';
+      for (const p of stratPriorities) html += `<div class="list-row"><span class="list-arrow">→</span>${escHtml(p)}</div>`;
+      html += '</div>';
+    }
+    if (recentMoves.length) {
+      html += '<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Recent Strategic Moves</div>';
+      for (const m of recentMoves) html += `<div class="list-row"><span class="list-arrow">→</span>${escHtml(m)}</div>`;
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  // ── 5yr Financials table ──
+  if (finData.length) {
+    let tbl = `<div class="fin-wrap"><table class="fin-table"><thead><tr>`;
+    for (const h of finHeaders) tbl += `<th>${escHtml(h)}</th>`;
+    tbl += '</tr></thead><tbody>';
+    for (const row of finData) {
+      tbl += '<tr>';
+      for (let i = 0; i < finHeaders.length; i++) {
+        const h = finHeaders[i], v = row[h] || '';
+        let cls = '';
+        if (i > 0) {
+          const n = parseFloat(String(v).replace(/[^-\d.]/g,''));
+          if (!isNaN(n) && (h.includes('Growth') || h.includes('Profit') || h.includes('NP'))) {
+            cls = n >= 0 ? ' class="fin-pos"' : ' class="fin-neg"';
+          }
+        }
+        const disp = (h.includes('Growth') || h.includes('%')) && v && !v.includes('%') ? v + '%' : v;
+        tbl += `<td${cls}>${escHtml(disp)}</td>`;
+      }
+      tbl += '</tr>';
+    }
+    tbl += '</tbody></table></div>';
+    html += `<div class="card" style="margin-bottom:16px">
+      <div class="card-title"><span class="card-title-dot"></span>5-Year Financial History (USD millions)</div>${tbl}</div>`;
+  }
+
+  // ── Acquisition Capacity (buy-side only) ──
+  if (acqContent) {
+    const acqKv = kvList(acqContent);
+    const cash = acqKv['Cash Position'] || '—';
+    const cap  = acqKv['Estimated Acquisition Capacity'] || acqKv['Acquisition Capacity'] || '—';
+    const cashFmt = cash.replace(/USD\s+([\d.]+)m/i, (_, n) => fmtUSDm(parseFloat(n)));
+    const capFmt  = cap.replace(/USD\s+([\d.]+)m/i,  (_, n) => fmtUSDm(parseFloat(n)));
+    html += `<div class="card" style="margin-bottom:16px">
+      <div class="card-title"><span class="card-title-dot"></span>Acquisition Capacity</div>
+      <div class="g2" style="gap:12px">
+        <div class="kpi"><div class="kpi-lbl">Cash Position</div><div class="kpi-val kpi-green">${escHtml(cashFmt)}</div></div>
+        <div class="kpi"><div class="kpi-lbl">Est. Acquisition Capacity</div><div class="kpi-val kpi-purple">${escHtml(capFmt)}</div><div class="kpi-sub">Including leverage capacity</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ── Previous Acquisitions (buy-side only) ──
+  if (prevAcq.length) {
+    html += '<div class="card card-sm" style="margin-bottom:16px"><div class="card-title"><span class="card-title-dot"></span>Previous Acquisitions</div>';
+    for (const p of prevAcq) html += `<div class="list-row"><span class="list-arrow">→</span>${escHtml(p)}</div>`;
+    html += '</div>';
+  }
+
+  // ── Risk Flags ──
+  if (riskFlags.length) {
+    html += '<div class="card card-sm" style="margin-bottom:16px"><div class="card-title"><span class="card-title-dot"></span>Risk Flags</div>';
+    for (const f of riskFlags) html += `<div class="flag-item"><span class="flag-icon">⚠</span>${escHtml(f)}</div>`;
+    html += '</div>';
+  }
+
+  // ── Narrative ──
+  if (narrative) {
+    html += `<div class="card card-sm" style="margin-bottom:16px">
+      <div class="card-title"><span class="card-title-dot"></span>Narrative Summary</div>
+      <div class="narrative">${escHtml(narrative)}</div>
+    </div>`;
+  }
+
+  if (sources.length) html += renderDataSources(sources);
+  return html;
+}
+
+// ── KV helper: parse "- **Key:** value" or "- **Key**: value" lines ────────
+function kvList(text) {
+  const result = {};
+  for (const l of text.split('\n')) {
+    // Handles both **key:** value (colon inside bold) and **key**: value (colon outside bold)
+    const m = l.match(/[-*]\s*\*\*(.+?):?\*\*:?\s*(.+)/);
+    if (m) result[m[1].trim().replace(/:$/, '')] = m[2].trim();
+  }
+  return result;
+}
+
+// ── Human-readable KPI labels ─────────────────────────────────────────────
+function humanizeKpiLabel(k) {
+  const MAP = {
+    'ARPU_USD': 'ARPU (USD)', 'arpu_usd': 'ARPU (USD)',
+    'wireless_subscribers_m': 'Wireless Subscribers (M)',
+    'mobile_subscribers_m': 'Mobile Subscribers (M)',
+    'fiber_subscribers_m': 'Fiber Subscribers (M)',
+    'fixed_broadband_subscribers_m': 'Fixed Broadband Subscribers (M)',
+    'churn_rate_pct': 'Churn Rate (%)',
+    'full_fiber_network_coverage_pct': 'Full Fiber Coverage (%)',
+    'mobile_coverage_pct': 'Mobile Coverage (%)',
+    'mobile_penetration_pct': 'Mobile Penetration (%)',
+    'broadband_coverage_pct': 'Broadband Coverage (%)',
+    'broadband_penetration_pct': 'Broadband Penetration (%)',
+    'tenancy_ratio': 'Tenancy Ratio',
+    'number_of_towers': 'Number of Towers',
+    'revenue_per_site_usd_monthly': 'Revenue/Site/Month (USD)',
+    'revenue_per_site_usd': 'Revenue Per Site (USD)',
+    'site_uptime_pct': 'Site Uptime (%)',
+    'infrastructure_utilization_rate_pct': 'Infra Utilization (%)',
+    'gpu_utilization_pct': 'GPU Utilization (%)',
+    'compute_cost_per_hour_usd': 'Compute Cost/Hour (USD)',
+    'uptime_pct': 'Uptime SLA (%)',
+    'buyer_market_share_pct': 'Buyer Market Share (%)',
+    'gap_vs_leader_pct': 'Gap vs Leader (%)',
+    'market_share_pct': 'Market Share (%)',
+    'fwa_subscribers_m': 'FWA Subscribers (M)',
+    'fiveg_adoption_pct': '5G Adoption (%)',
+    // AI / Cloud / Data Centre
+    'data_center_capacity_mw': 'Data Center Capacity (MW)',
+    'active_power_mw': 'Active Power (MW)',
+    'contracted_power_gw': 'Contracted Power (GW)',
+    'active_power_gw': 'Active Power (GW)',
+    'gpu_count': 'GPU Count',
+    'gpu_count_k': 'GPU Count (K)',
+    'target_arr_usd_bn': 'Target ARR (USD bn)',
+    'arr_usd_bn': 'ARR (USD bn)',
+    'backlog_usd_bn': 'Backlog (USD bn)',
+    'revenue_backlog_usd_bn': 'Revenue Backlog (USD bn)',
+    'revenue_backlog_usd_b': 'Revenue Backlog (USD bn)',
+    'revenue_backlog_usd_m': 'Revenue Backlog (USD M)',
+    'power_utilization_pct': 'Power Utilization (%)',
+    'pue_ratio': 'PUE Ratio',
+    'rack_density_kw': 'Rack Density (kW)',
+    'network_latency_ms': 'Network Latency (ms)',
+    'gross_margin_pct': 'Gross Margin (%)',
+    'ebitda_margin_pct': 'EBITDA Margin (%)',
+    'net_debt_usd_bn': 'Net Debt (USD bn)',
+    'debt_to_ebitda': 'Debt / EBITDA',
+  };
+  return MAP[k] || MAP[k.toLowerCase()] || k.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// ── Financials table parser ────────────────────────────────────────────────
+function parseFinRows(content) {
+  const rows = content.split('\n').filter(l => l.includes('|'));
+  if (rows.length < 3) return { headers: [], data: [] };
+  const headers = rows[0].split('|').map(c => c.trim()).filter(Boolean);
+  const data = rows.slice(2)
+    .map(r => {
+      const cells = r.split('|').map(c => c.trim()).filter(Boolean);
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = cells[i] || ''; });
+      return obj;
+    })
+    .filter(r => r[headers[0]]);
+  return { headers, data };
+}
+
+// ── Buy Side Country ──────────────────────────────────────────────────────
+function renderBuyCountry(content) {
+  const clean = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+  let env = null, repatriation = '', riskFlags = [], narrative = '', sources = [];
+
+  for (const sec of parseSections(clean)) {
+    const h = sec.heading;
+    if (h.includes('Outbound M&A Environment'))   env = sec;
+    else if (h.includes('Capital Repatriation') || (h.includes('Capital') && h.includes('FX'))) repatriation = sec.content;
+    else if (h.includes('Risk Flags'))            riskFlags = parseListItems(sec.content);
+    else if (h.includes('Narrative Summary'))     narrative = sec.content;
+    else if (h.includes('Data Sources'))          sources = parseListItems(sec.content);
+  }
+
+  let html = '<div class="g3" style="margin-bottom:16px">';
+
+  if (env) {
+    const kv = kvList(env.content);
+    const currRaw   = kv['Currency'] || '—';
+    const stability = kv['Political Stability Score'] || kv['Political Stability'] || '—';
+    const tax       = kv['Corporate Tax Rate'] || '—';
+    const currCode  = currRaw.split('(')[0].trim();
+    const currSub   = currRaw.includes('(') ? (currRaw.match(/\(([^)]+)\)/)?.[1] || '') : '';
+    html += `<div class="chart-card">
+      <div class="chart-card-title">Outbound M&amp;A Environment</div>
+      <div class="chart-card-sub">Currency, stability &amp; tax overview</div>
+      <div class="g3" style="gap:10px">
+        <div class="kpi"><div class="kpi-lbl">Currency</div><div class="kpi-val kpi-purple">${escHtml(currCode)}</div><div class="kpi-sub">${escHtml(currSub)}</div></div>
+        <div class="kpi"><div class="kpi-lbl">Political Stability</div><div class="kpi-val">${escHtml(stability)}</div></div>
+        <div class="kpi"><div class="kpi-lbl">Corp Tax Rate</div><div class="kpi-val">${escHtml(tax)}</div></div>
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="chart-card span2">
+    <div class="card-title" style="margin-bottom:10px"><span class="card-title-dot"></span>Capital Repatriation &amp; FX</div>
+    <div class="narrative">${escHtml(repatriation)}</div>
+  </div>`;
+  html += '</div>'; // close g3
+
+  if (riskFlags.length) {
+    html += '<div class="card card-sm" style="margin-bottom:16px"><div class="card-title"><span class="card-title-dot"></span>Risk Flags — Outbound M&amp;A</div>';
+    for (const f of riskFlags) html += `<div class="flag-item"><span class="flag-icon">⚠</span>${escHtml(f)}</div>`;
+    html += '</div>';
+  }
+
+  if (narrative) {
+    html += `<div class="card card-sm" style="margin-bottom:16px">
+      <div class="card-title"><span class="card-title-dot"></span>Narrative Summary</div>
+      <div class="narrative">${escHtml(narrative)}</div>
+    </div>`;
+  }
+  if (sources.length) html += renderDataSources(sources);
+  return html;
+}
+
+// ── Buy Side Sector ───────────────────────────────────────────────────────
+function renderBuySector(content) {
+  const clean = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+  let marketPos = null, compKPIs = null, regs = [], riskFlags = [], narrative = '', sources = [];
+
+  for (const sec of parseSections(clean)) {
+    const h = sec.heading;
+    if (h.includes("Market Position"))                    marketPos = sec;
+    else if (h.includes("Competitive Gaps") || h.includes("Competitive KPIs")) compKPIs = sec;
+    else if (h.includes("Regulatory"))                   regs = parseListItems(sec.content);
+    else if (h.includes("Risk Flags"))                   riskFlags = parseListItems(sec.content);
+    else if (h.includes("Narrative Summary"))            narrative = sec.content;
+    else if (h.includes("Data Sources"))                 sources = parseListItems(sec.content);
+  }
+
+  const riskCls = v => v === 'LOW' ? 'kpi-green' : v === 'HIGH' ? 'kpi-red' : 'kpi-gold';
+
+  let html = '<div class="g2" style="margin-bottom:16px">';
+
+  if (marketPos) {
+    const kv = kvList(marketPos.content);
+    const mktSize = kv['Market Size'] || '—';
+    const growth  = kv['Growth Rate'] || '—';
+    const compR   = kv['Competitive Risk'] || '—';
+    const techR   = kv['Tech Disruption Risk'] || '—';
+    html += `<div class="card card-sm">
+      <div class="card-title"><span class="card-title-dot"></span>Market Position</div>
+      <div class="g2" style="gap:10px">
+        <div class="kpi"><div class="kpi-lbl">Market Size</div><div class="kpi-val kpi-purple">${escHtml(mktSize)}</div></div>
+        <div class="kpi"><div class="kpi-lbl">Growth Rate</div><div class="kpi-val kpi-green">${escHtml(growth)}</div></div>
+        <div class="kpi"><div class="kpi-lbl">Competitive Risk</div><div class="kpi-val ${riskCls(compR)}">${escHtml(compR)}</div></div>
+        <div class="kpi"><div class="kpi-lbl">Tech Disruption</div><div class="kpi-val ${riskCls(techR)}">${escHtml(techR)}</div></div>
+      </div>
+    </div>`;
+  }
+
+  if (compKPIs) {
+    const kv = kvList(compKPIs.content);
+    const compKeys = Object.keys(kv);
+    if (compKeys.length) {
+      const cols = Math.min(compKeys.length, 4);
+      html += `<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Competitive KPIs</div><div class="g${cols}" style="gap:10px">`;
+      for (const k of compKeys) {
+        const lbl = humanizeKpiLabel(k);
+        const isBad = /gap|loss|churn/i.test(k);
+        html += `<div class="kpi"><div class="kpi-lbl">${escHtml(lbl)}</div><div class="kpi-val ${isBad ? 'kpi-red' : ''}">${escHtml(String(kv[k]))}</div></div>`;
+      }
+      html += '</div></div>';
+    }
+  }
+
+  html += '</div>'; // close g2
+
+  if (regs.length || riskFlags.length) {
+    html += '<div class="g2" style="margin-bottom:16px">';
+    if (regs.length) {
+      html += '<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Key Regulatory Considerations</div>';
+      for (const r of regs) html += `<div class="list-row"><span class="list-arrow">→</span>${escHtml(r)}</div>`;
+      html += '</div>';
+    }
+    if (riskFlags.length) {
+      html += '<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Risk Flags</div>';
+      for (const f of riskFlags) html += `<div class="flag-item"><span class="flag-icon">⚠</span>${escHtml(f)}</div>`;
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  if (narrative) {
+    html += `<div class="card card-sm" style="margin-bottom:16px">
+      <div class="card-title"><span class="card-title-dot"></span>Narrative Summary</div>
+      <div class="narrative">${escHtml(narrative)}</div>
+    </div>`;
+  }
+  if (sources.length) html += renderDataSources(sources);
+  return html;
+}
+
+// ── Generic (fallback) ────────────────────────────────────────────────────
+function renderGeneric(content) {
+  const clean = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+  let html = '';
+  for (const sec of parseSections(clean)) {
+    const h = sec.heading;
+    if (h.includes('Data Sources')) html += renderDataSources(parseListItems(sec.content));
+    else html += `<div class="card card-sm">
+      <div class="card-title"><span class="card-title-dot"></span>${escHtml(h)}</div>
+      <div class="card-body">${marked.parse(sec.content)}</div>
+    </div>`;
+  }
+  if (!html) html = `<div class="card"><div class="card-body">${marked.parse(clean)}</div></div>`;
+  return html;
+}
+
+// ── Risk Tab ──────────────────────────────────────────────────────────────
+function renderRisk(content) {
+  const clean = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'').replace(/\*\*Overall Risk Rating.*\n/,'').replace(/\*\*Human Review.*\n/,'');
+  const sections = parseSections(clean);
+  let risks = [], insights = [], sources = [];
+  for (const sec of sections) {
+    const h = sec.heading.toLowerCase();
+    if (h === 'risk details') risks = parseRiskDetails(sec.content);
+    else if (h === 'cross-workstream insights') insights = parseListItems(sec.content);
+    else if (h.includes('data sources')) sources = parseListItems(sec.content);
+    else if (h === 'risk matrix') risks = parseRiskMatrix(sec.content, risks);
+  }
+
+  let html = '';
+  for (const r of risks) html += renderRiskCard(r);
+
+  if (insights.length) {
+    html += `<div class="card card-sm" style="margin-top:8px">
+      <div class="card-title"><span class="card-title-dot"></span>Cross-Workstream Insights</div>
+      <div class="card-body"><ul>${insights.map(i => `<li>${escHtml(i)}</li>`).join('')}</ul></div>
+    </div>`;
+  }
+  if (sources.length) html += renderDataSources(sources);
+  if (!html) html = `<div class="card"><div class="card-body">${marked.parse(clean)}</div></div>`;
+  return html;
+}
+
+function parseRiskMatrix(mc, existing) {
   if (existing.length) return existing;
   const risks = [];
-  const rows = matrixContent.split('\n').filter(l => l.includes('|') && !l.includes('Risk') && !l.match(/^[|\s-]+$/));
+  const rows = mc.split('\n').filter(l => l.includes('|') && !l.includes('Risk') && !l.match(/^[|\s-]+$/));
   for (const row of rows) {
     const cells = row.split('|').map(c => c.trim()).filter(Boolean);
-    if (cells.length >= 4) {
-      risks.push({ title: cells[0], category: cells[1], severity: cells[2], probability: cells[3], description: '', mitigants: [] });
-    }
+    if (cells.length >= 4) risks.push({ title: cells[0], category: cells[1], severity: cells[2], probability: cells[3], description: '', mitigants: [] });
   }
   return risks.length ? risks : existing;
 }
 
 function parseRiskDetails(content) {
-  const risks = [];
-  const re = /^####\s+(.+)$/gm;
-  let match, prev = null;
+  const risks = []; const re = /^####\s+(.+)$/gm; let match, prev = null;
   while ((match = re.exec(content)) !== null) {
     if (prev) risks.push(parseOneRisk(prev.title, content.slice(prev.end, match.index).trim()));
     prev = { title: match[1].trim(), end: match.index + match[0].length };
@@ -867,145 +1677,178 @@ function parseRiskDetails(content) {
 }
 
 function parseOneRisk(title, body) {
-  const catM = body.match(/\*\*Category:\*\*\s*([A-Z_]+)/i);
-  const sevM = body.match(/\*\*Severity:\*\*\s*(HIGH|MEDIUM|LOW)/i);
+  const catM  = body.match(/\*\*Category:\*\*\s*([A-Z_]+)/i);
+  const sevM  = body.match(/\*\*Severity:\*\*\s*(HIGH|MEDIUM|LOW)/i);
   const probM = body.match(/\*\*Probability:\*\*\s*(HIGH|MEDIUM|LOW)/i);
   const descM = body.match(/\*\*Description:\*\*\s*(.+?)(?:\n|$)/is);
   const mitigants = [];
   const mitSect = body.match(/\*\*Mitigants:\*\*[\s\S]*?((?:\s*-[^\n]+\n?)+)/i);
   if (mitSect) {
     for (const l of mitSect[1].split('\n')) {
-      const t = l.replace(/^\s*[-*]\s*/, '').trim();
-      if (t) mitigants.push(t);
+      const t = l.replace(/^\s*[-*]\s*/,'').trim(); if (t) mitigants.push(t);
     }
   }
-  return {
-    title,
-    category: catM ? catM[1] : '',
-    severity: sevM ? sevM[1] : '',
-    probability: probM ? probM[1] : '',
-    description: descM ? descM[1].trim() : '',
-    mitigants,
-  };
+  return { title, category: catM?catM[1]:'', severity: sevM?sevM[1]:'', probability: probM?probM[1]:'', description: descM?descM[1].trim():'', mitigants };
 }
 
 function renderRiskCard(r) {
-  const sevColor = { HIGH: 'var(--error)', MEDIUM: 'var(--warning)', LOW: 'var(--success)' };
-  return `<div class="risk-card">
-    <div class="risk-card-header">
-      <div class="risk-title">${escHtml(r.title)}</div>
-      <div class="risk-badges">
-        ${r.category ? `<span class="risk-badge cat">${escHtml(r.category)}</span>` : ''}
-        ${r.severity ? `<span class="risk-badge ${r.severity}" title="Severity">SEV: ${r.severity}</span>` : ''}
-        ${r.probability ? `<span class="risk-badge ${r.probability}" title="Probability">PROB: ${r.probability}</span>` : ''}
+  const sev = r.severity.toUpperCase();
+  return `<div class="risk-item ${sev}">
+    <div class="risk-item-top">
+      <div class="risk-item-title">${escHtml(r.title)}</div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        ${r.category ? `<span class="badge b-gray" style="font-size:11px">${escHtml(r.category)}</span>` : ''}
+        ${sev ? `<span class="badge ${sev==='HIGH'?'b-red':sev==='MEDIUM'?'b-gold':'b-green'}" style="font-size:11px">${sev}</span>` : ''}
       </div>
     </div>
-    ${r.description ? `<div class="risk-desc">${escHtml(r.description)}</div>` : ''}
-    ${r.mitigants.length ? `<div class="risk-mitigants"><strong>Mitigants</strong><ul>${r.mitigants.map(m => `<li>${escHtml(m)}</li>`).join('')}</ul></div>` : ''}
+    ${r.description ? `<div class="risk-item-desc">${escHtml(r.description)}</div>` : ''}
+    ${r.mitigants.length ? `<div class="risk-mitigant"><strong>Mitigants</strong><br>${r.mitigants.map(m => `• ${escHtml(m)}`).join('<br>')}</div>` : ''}
   </div>`;
 }
 
-// ── Deal Tab ──────────────────────────────────────────────────────────────────
-function renderDeal(content, title, confidence) {
-  const cleanContent = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
-  const decision = manifest?.decision || extractDecision(cleanContent);
-  const sections = parseSections(cleanContent);
+// ── Deal Tab ──────────────────────────────────────────────────────────────
+function renderDeal(content, title, confidence, icon) {
+  const clean = content.replace(/^##.*\n+/m,'').replace(/\*\*Status:.*\*\*.*\n/,'');
+  const decision = manifest?.decision || extractDecision(clean);
+  const sections = parseSections(clean);
 
-  const CATEGORY_LABELS = {
-    'NEW_PRODUCTS': 'Expanding Product Portfolio',
-    'NEW_CUSTOMERS': 'New Customer Segments',
-    'ASSET_MONETIZATION': 'Asset Monetization',
-    'COST_SYNERGY': 'Cost Synergies',
-    'REVENUE_SYNERGY': 'Revenue Synergies',
-  };
-
-  const decisionLabels = { GO: '✅ GO', NO_GO: '❌ NO-GO', REVISIT: '⏳ REVISIT' };
-  const decisionCls = { GO: 'decision-GO', NO_GO: 'decision-NO_GO', REVISIT: 'decision-REVISIT' };
-  const scoreM = cleanContent.match(/Strategic Fit Score.*?([\d.]+)\s*\/\s*10/i);
+  const decCls = { GO:'dec-GO', NO_GO:'dec-NO_GO', REVISIT:'dec-REVISIT' };
+  const decLabel = { GO:'✅ GO', NO_GO:'❌ NO-GO', REVISIT:'⏳ REVISIT' };
+  const scoreM = clean.match(/Strategic Fit Score.*?([\d.]+)\s*\/\s*10/i);
   const score = scoreM ? scoreM[1] : null;
+  const confStr = confidence ? `Confidence: ${confidence}` : '';
 
-  let vcaSection = null, valSection = null, condSection = null, nextSection = null;
+  let rationaleSec = null, vcaSec = null, compTxSec = null, valSec = null, condSec = null, nextSec = null;
   for (const sec of sections) {
     const h = sec.heading.toLowerCase();
-    if (h.includes('value creation')) vcaSection = sec;
-    else if (h.includes('valuation')) valSection = sec;
-    else if (h.includes('condition') || h.includes('reversal')) condSection = sec;
-    else if (h.includes('next step')) nextSection = sec;
+    if (h.includes('deal rationale') || h.includes('decision rationale') || h.includes('top 5')) rationaleSec = sec;
+    else if (h.includes('value creation')) vcaSec = sec;
+    else if (h.includes('comparable transaction')) compTxSec = sec;
+    else if (h.includes('valuation')) valSec = sec;
+    else if (h.includes('condition') || h.includes('reversal')) condSec = sec;
+    else if (h.includes('next step')) nextSec = sec;
   }
 
-  let html = `
-    <div class="agent-section">
-      <div class="agent-section-header">
-        <div class="agent-section-title">${escHtml(title)}</div>
-        ${confidence ? `<span class="confidence-badge">Confidence: ${escHtml(confidence)}</span>` : ''}
-      </div>`;
+  let html = `<div>
+    <div class="section-hd">
+      <div class="section-title">${icon} ${escHtml(title)}</div>
+      ${confidence ? `<div class="conf-pill">✦ ${confStr}</div>` : ''}
+    </div>`;
 
-  // 1. Value Creation Avenues
-  if (vcaSection) {
-    const vcas = parseVCAs(vcaSection.content);
-    const ICONS = { NEW_PRODUCTS: '🚀', NEW_CUSTOMERS: '👥', ASSET_MONETIZATION: '💎', COST_SYNERGY: '⚙️', REVENUE_SYNERGY: '📈' };
-    html += `<div class="card" style="margin-bottom:16px">
-      <div class="card-title"><span class="dot"></span>Value Creation Avenues</div>
-      <div>`;
+  // Decision hero
+  html += `<div class="decision-hero ${decCls[decision]||'dec-REVISIT'}">
+    <div style="font-size:42px;margin-bottom:6px">${decision==='GO'?'✅':decision==='NO_GO'?'❌':'⏳'}</div>
+    <div class="dec-word">${(decLabel[decision]||decision).replace(/^[✅❌⏳]\s*/,'')}</div>
+    <div style="font-size:14px;color:var(--muted);margin-top:8px">
+      Strategic Fit Score: <strong style="color:var(--text)">${score ? score+'/10' : '—'}</strong>
+      ${confStr ? ` · ${confStr}` : ''}
+    </div>
+  </div>`;
+
+  // Deal Rationale (decision_rationale bullet points)
+  if (rationaleSec) {
+    const items = rationaleSec.content.split('\n').filter(l => l.trim().match(/^\d+\.|^[-*]/)).map(l => l.replace(/^\d+\.\s*|^[-*]\s*/,'').trim()).filter(Boolean);
+    if (items.length) {
+      html += `<div class="card card-sm" style="margin-bottom:16px">
+        <div class="card-title"><span class="card-title-dot"></span>Deal Rationale</div>
+        <div class="card-body"><ol style="padding-left:18px">${items.map(i => `<li style="margin-bottom:10px">${escHtml(i)}</li>`).join('')}</ol></div>
+      </div>`;
+    }
+  }
+
+  // Value creation
+  if (vcaSec) {
+    const vcas = parseVCAs(vcaSec.content);
+    const ICONS = {
+      NEW_PRODUCTS:'🚀', NEW_CUSTOMERS:'👥', ASSET_MONETIZATION:'💎',
+      COST_SYNERGY:'⚙️', REVENUE_SYNERGY:'📈', REGULATORY_SYNERGY:'🏛️', FINANCIAL_EFFICIENCY:'💰'
+    };
+    const LABELS = {
+      NEW_PRODUCTS:'Expanding Product Portfolio', NEW_CUSTOMERS:'New Customer Segments',
+      ASSET_MONETIZATION:'Asset Monetization', COST_SYNERGY:'Cost Synergies',
+      REVENUE_SYNERGY:'Revenue Synergies', REGULATORY_SYNERGY:'Regulatory & Policy Synergy',
+      FINANCIAL_EFFICIENCY:'Capital & Financial Efficiencies'
+    };
+    html += `<div class="card card-sm" style="margin-bottom:16px">
+      <div class="card-title"><span class="card-title-dot"></span>Value Creation Avenues</div>`;
     if (vcas.length) {
+      html += '<div>';
       for (const v of vcas) {
-        const label = CATEGORY_LABELS[v.category] || v.category;
-        html += `<div class="value-card">
-          <div class="value-card-icon">${ICONS[v.category] || '💡'}</div>
-          <div class="value-card-body">
-            <div class="value-card-title">${escHtml(label)}</div>
-            <div class="value-card-desc">${escHtml(v.description)}</div>
-            ${v.impact ? `<span class="value-card-impact impact-${v.impact}">${v.impact} Impact</span>` : ''}
-            ${v.requires_integration ? `<span class="value-card-impact" style="background:rgba(148,163,184,0.1);color:var(--muted);margin-left:6px">Requires Integration</span>` : ''}
+        const impBadge = v.impact ? `<span class="badge ${v.impact==='HIGH'?'b-green':v.impact==='MEDIUM'?'b-gold':'b-gray'}" style="font-size:11px;margin-top:6px">${v.impact} Impact</span>` : '';
+        html += `<div class="value-avenue">
+          <div class="value-avenue-icon">${ICONS[v.category]||'💡'}</div>
+          <div>
+            <div class="value-avenue-title">${LABELS[v.category]||escHtml(v.category)}</div>
+            <div class="value-avenue-desc">${escHtml(v.description)}</div>
+            ${impBadge}
           </div>
         </div>`;
       }
+      html += '</div>';
     } else {
-      html += `<div class="card-body md-content">${marked.parse(vcaSection.content)}</div>`;
-    }
-    html += '</div></div>';
-  }
-
-  // 2. Valuation
-  if (valSection) {
-    const low = extractValuationNum(valSection.content, 'low') || (manifest?.implied_valuation_range_usd_m?.low || 0);
-    const high = extractValuationNum(valSection.content, 'high') || (manifest?.implied_valuation_range_usd_m?.high || 0);
-    const evM = valSection.content.match(/EV\/EBITDA Range.*?(\d+\.?\d*)\s*(?:–|-|x)\s*(\d+\.?\d*)/i);
-    html += `<div class="valuation-card">
-      <div class="card-title" style="margin-bottom:12px"><span class="dot"></span>Valuation</div>`;
-    if (evM) html += `<div style="font-size:13px;color:var(--muted);margin-bottom:8px">EV/EBITDA Range: <strong>${evM[1]}x – ${evM[2]}x</strong></div>`;
-    if (high > 0) {
-      const pct = Math.min(90, Math.max(20, ((high - low) / high) * 100));
-      html += `<div style="font-size:13px;color:var(--muted);margin-bottom:6px">Implied Enterprise Value Range</div>
-        <div class="val-track"><div class="val-fill" style="width:${pct}%"></div></div>
-        <div class="val-range"><span>USD ${low.toLocaleString()}m</span><span>USD ${high.toLocaleString()}m</span></div>`;
-    } else {
-      html += `<div class="card-body md-content">${marked.parse(valSection.content)}</div>`;
+      html += `<div class="card-body">${marked.parse(vcaSec.content)}</div>`;
     }
     html += '</div>';
   }
 
-  // 3. Deal Decision
-  html += `<div class="decision-banner ${decisionCls[decision] || 'decision-REVISIT'}">
-    <div class="decision-label">${decisionLabels[decision] || decision}</div>
-    <div class="decision-sub">Strategic Fit Score: ${score ? score + '/10' : '—'}</div>
-  </div>`;
+  // Comparable Transactions + Implied Valuation Range side by side
+  const hasCompTx = compTxSec && compTxSec.content.includes('|');
+  const hasVal = !!valSec;
+  if (hasCompTx || hasVal) {
+    html += `<div class="${hasCompTx && hasVal ? 'g2' : ''}" style="margin-bottom:16px">`;
 
-  // 4. Conditions for Reversal
-  if (condSection) {
-    const items = parseListItems(condSection.content);
-    html += `<div class="steps-card">
-      <div class="card-title"><span class="dot"></span>Conditions for Reversal</div>
-      <ol>${items.map(i => `<li>${escHtml(i)}</li>`).join('')}</ol>
+    if (compTxSec) {
+      const { headers: txH, data: txD } = parseFinRows(compTxSec.content);
+      if (txD.length) {
+        html += `<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Comparable Transactions</div>
+          <div class="fin-wrap"><table class="fin-table"><thead><tr>`;
+        for (const h of txH) html += `<th style="text-align:left">${escHtml(h)}</th>`;
+        html += '</tr></thead><tbody>';
+        for (const row of txD) {
+          html += '<tr>';
+          for (const h of txH) html += `<td style="text-align:left">${escHtml(row[h]||'')}</td>`;
+          html += '</tr>';
+        }
+        html += '</tbody></table></div></div>';
+      } else {
+        html += `<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Comparable Transactions</div><div class="card-body">${marked.parse(compTxSec.content)}</div></div>`;
+      }
+    }
+
+    if (valSec) {
+      const low = extractValuationNum(valSec.content, 'low') || manifest?.implied_valuation_range_usd_m?.low || 0;
+      const high = extractValuationNum(valSec.content, 'high') || manifest?.implied_valuation_range_usd_m?.high || 0;
+      const evM = valSec.content.match(/EV\/EBITDA Range.*?(\d+\.?\d*)\s*(?:–|-|x)\s*(\d+\.?\d*)/i);
+      html += `<div class="card card-sm"><div class="card-title"><span class="card-title-dot"></span>Implied Valuation Range</div>`;
+      if (evM) html += `<div style="font-size:13px;color:var(--muted);margin-bottom:8px">EV/EBITDA Range: <strong style="color:var(--text)">${evM[1]}x – ${evM[2]}x</strong></div>`;
+      if (high > 0) {
+        html += `<div class="val-bar"><div class="val-fill" style="width:80%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700">
+            <span>USD ${low.toLocaleString()}m</span><span>USD ${high.toLocaleString()}m</span>
+          </div>`;
+      } else {
+        html += `<div class="card-body">${marked.parse(valSec.content)}</div>`;
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  // Conditions for reversal
+  if (condSec) {
+    const items = parseListItems(condSec.content);
+    html += `<div class="card card-sm" style="margin-bottom:16px">
+      <div class="card-title"><span class="card-title-dot"></span>Conditions for Reversal</div>
+      <div class="card-body"><ol style="padding-left:18px">${items.map(i => `<li style="margin-bottom:8px">${escHtml(i)}</li>`).join('')}</ol></div>
     </div>`;
   }
 
-  // 5. Next Steps
-  if (nextSection) {
-    const items = parseListItems(nextSection.content);
-    html += `<div class="steps-card">
-      <div class="card-title"><span class="dot"></span>Recommended Next Steps</div>
-      <ol>${items.map(i => `<li>${escHtml(i)}</li>`).join('')}</ol>
+  // Next steps
+  if (nextSec) {
+    const items = parseListItems(nextSec.content);
+    html += `<div class="card card-sm" style="margin-bottom:16px">
+      <div class="card-title"><span class="card-title-dot"></span>Recommended Next Steps</div>
+      <div class="card-body"><ol style="padding-left:18px">${items.map(i => `<li style="margin-bottom:8px">${escHtml(i)}</li>`).join('')}</ol></div>
     </div>`;
   }
 
@@ -1014,16 +1857,15 @@ function renderDeal(content, title, confidence) {
 }
 
 function parseVCAs(content) {
-  const VCA_CATS = ['NEW_PRODUCTS','NEW_CUSTOMERS','ASSET_MONETIZATION','COST_SYNERGY','REVENUE_SYNERGY'];
+  const CATS = ['NEW_PRODUCTS','NEW_CUSTOMERS','ASSET_MONETIZATION','COST_SYNERGY','REVENUE_SYNERGY','REGULATORY_SYNERGY','FINANCIAL_EFFICIENCY'];
   const vcas = [];
   for (const l of content.split('\n')) {
     const catM = l.match(/\*\*([A-Z_]+)\*\*/);
-    const cat = catM ? catM[1] : null;
-    if (cat && VCA_CATS.includes(cat)) {
-      const desc = l.replace(/^\s*[-*]\s*/, '').replace(/\*\*[A-Z_]+\*\*\s*[🔼➡️⬇️🔽\s]*:\s*/, '').replace(/\s*_\(.*?\)_/, '').trim();
-      const impactM = l.match(/impact.*?(HIGH|MEDIUM|LOW)/i) || [];
-      const ri = l.includes('requires integration') || l.includes('_(requires');
-      vcas.push({ category: cat, description: desc, impact: impactM[1] || '', requires_integration: ri });
+    const cat = catM?catM[1]:null;
+    if (cat && CATS.includes(cat)) {
+      const desc = l.replace(/^\s*[-*]\s*/,'').replace(/\*\*[A-Z_]+\*\*\s*[🔼➡️⬇️🔽\s]*:\s*/,'').replace(/\s*_\(.*?\)_/,'').trim();
+      const impM = l.match(/impact.*?(HIGH|MEDIUM|LOW)/i)||[];
+      vcas.push({ category: cat, description: desc, impact: impM[1]||'' });
     }
   }
   return vcas;
@@ -1038,160 +1880,171 @@ function extractDecision(content) {
 
 function extractValuationNum(content, type) {
   const m = content.match(/USD\s+([\d,]+(?:\.\d+)?)\s*m?\s*[–-]\s*USD\s+([\d,]+(?:\.\d+)?)\s*m/i);
-  if (m) {
-    const low = parseFloat(m[1].replace(/,/g,''));
-    const high = parseFloat(m[2].replace(/,/g,''));
-    return type === 'low' ? low : high;
-  }
-  return 0;
+  if (!m) return 0;
+  return type === 'low' ? parseFloat(m[1].replace(/,/g,'')) : parseFloat(m[2].replace(/,/g,''));
 }
 
-// ── Data Sources ──────────────────────────────────────────────────────────────
+// ── Data Sources ───────────────────────────────────────────────────────────
 function renderDataSources(sources) {
-  if (!sources.length) return '';
-  return `<div class="sources-card">
-    <div class="sources-title">📊 Data Sources</div>
-    <div class="sources-list">
-      ${sources.map(s => {
-        const url = s.replace(/^[-*]\s*/, '').trim();
-        const isUrl = url.startsWith('http');
-        return isUrl
-          ? `<a class="source-link" href="${escHtml(url)}" target="_blank" rel="noopener">${escHtml(url)}</a>`
-          : `<span class="source-link">${escHtml(url)}</span>`;
-      }).join('')}
-    </div>
+  const clean = sources
+    .map(s => s.replace(/^[-*]\s*/,'').trim())
+    .filter(s => s.startsWith('http') &&
+      !s.includes('vertexaisearch') &&
+      !s.includes('googleapis.com') &&
+      !s.match(/google\.com\/search/));
+  if (!clean.length) return '';
+  const parts = clean.map((url, i) => {
+    const link = `<a class="source-link" href="${escAttr(url)}" target="_blank" rel="noopener">${escHtml(url)}</a>`;
+    return i === 0 ? link : `<span class="source-sep">|</span>${link}`;
+  }).join('');
+  return `<div class="card card-sm" style="margin-bottom:16px">
+    <div class="card-title"><span class="card-title-dot"></span>Data Sources</div>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px">${parts}</div>
   </div>`;
 }
 
-// ── Chart Init ────────────────────────────────────────────────────────────────
-function initChartsInPane(pane, items, tabType) {
-  const chartEls = pane.querySelectorAll('[data-chart-type]');
-  chartEls.forEach(el => {
+// ── Chart Init ─────────────────────────────────────────────────────────────
+function initChartsInPane(pane) {
+  pane.querySelectorAll('[data-chart-type]').forEach(el => {
     const type = el.getAttribute('data-chart-type');
+    const color = el.getAttribute('data-chart-color') || '#7c3aed';
     const section = el.getAttribute('data-chart-section');
     const data = el.getAttribute('data-chart-data');
-    const canvasId = el.querySelector('canvas')?.id;
-    if (!canvasId) return;
-
+    const canvas = el.querySelector('canvas');
+    if (!canvas) return;
+    const id = canvas.id;
     if (type === 'pie') {
       const { labels, values } = parsePlayerShares(data);
-      if (!labels.length) return;
-      initPieChart(canvasId, labels, values, section);
+      if (labels.length) initPieChart(id, labels, values);
     } else {
       const series = parseYearValues(data);
-      if (!series.length) return;
-      const isBar = type === 'bar';
-      initLineChart(canvasId, series, section, isBar);
-      setChartSummary(el, section, series);
+      if (series.length) {
+        initLineChart(id, series, section, type === 'bar', color);
+        const sub = el.querySelector('.chart-card-sub');
+        if (sub && series.length >= 2) {
+          const first = series[0].value, last = series[series.length-1].value;
+          const chg = ((last - first) / Math.abs(first || 1) * 100).toFixed(1);
+          sub.textContent = `${section.split('(')[0].trim()} ${+chg > 0 ? 'increased' : 'decreased'} ${Math.abs(chg)}% over 5 years.`;
+        }
+      }
     }
   });
 }
 
-const CHART_COLORS = ['#14b8a6','#6366f1','#f59e0b','#22c55e','#ef4444','#8b5cf6','#ec4899'];
+const PIE_COLORS = ['#7c3aed','#a855f7','#f59e0b','#94a3b8','#10b981','#ef4444'];
 
-function initLineChart(canvasId, series, label, isBar) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  if (chartRegistry[canvasId]) chartRegistry[canvasId].destroy();
-  const ctx = canvas.getContext('2d');
-  chartRegistry[canvasId] = new Chart(ctx, {
+function initLineChart(id, series, label, isBar, color) {
+  const canvas = document.getElementById(id); if (!canvas) return;
+  if (chartRegistry[id]) { try { chartRegistry[id].destroy(); } catch(e){} }
+  chartRegistry[id] = new Chart(canvas.getContext('2d'), {
     type: isBar ? 'bar' : 'line',
-    data: {
-      labels: series.map(d => d.year),
-      datasets: [{
-        label,
-        data: series.map(d => d.value),
-        borderColor: '#14b8a6',
-        backgroundColor: isBar ? 'rgba(20,184,166,0.5)' : 'rgba(20,184,166,0.1)',
-        borderWidth: 2,
-        pointBackgroundColor: '#14b8a6',
-        tension: 0.4,
-        fill: !isBar,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: 'rgba(51,65,85,0.5)' }, ticks: { color: '#94a3b8' } },
-        y: { grid: { color: 'rgba(51,65,85,0.5)' }, ticks: { color: '#94a3b8' } },
-      }
-    }
+    data: { labels: series.map(d=>d.year), datasets: [{ label, data: series.map(d=>d.value), borderColor: color, backgroundColor: isBar ? color+'cc' : color+'18', borderWidth: 2, pointBackgroundColor: color, pointRadius: 4, tension: 0.4, fill: !isBar, borderRadius: isBar ? 6 : 0 }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales: { x:{ grid:{ color:'rgba(107,78,200,0.08)' }, ticks:{ color:'#94a3b8', font:{size:11} } }, y:{ grid:{ color:'rgba(107,78,200,0.08)' }, ticks:{ color:'#94a3b8', font:{size:11} } } } }
   });
 }
 
-function initPieChart(canvasId, labels, values, label) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  if (chartRegistry[canvasId]) chartRegistry[canvasId].destroy();
-  const ctx = canvas.getContext('2d');
-  chartRegistry[canvasId] = new Chart(ctx, {
+function initPieChart(id, labels, values) {
+  const canvas = document.getElementById(id); if (!canvas) return;
+  if (chartRegistry[id]) { try { chartRegistry[id].destroy(); } catch(e){} }
+  chartRegistry[id] = new Chart(canvas.getContext('2d'), {
     type: 'pie',
-    data: {
-      labels,
-      datasets: [{
-        data: values,
-        backgroundColor: CHART_COLORS.slice(0, labels.length),
-        borderWidth: 1,
-        borderColor: '#1e293b',
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 12 } } },
-      }
-    }
+    data: { labels, datasets: [{ data: values, backgroundColor: PIE_COLORS.slice(0, labels.length), borderWidth: 2, borderColor: '#fff' }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ color:'#1e1b4b', font:{size:12}, padding:12 } } } }
   });
 }
 
-function setChartSummary(el, section, series) {
-  const summEl = el.querySelector('.chart-summary');
-  if (!summEl || series.length < 2) return;
-  const first = series[0].value, last = series[series.length-1].value;
-  const change = ((last - first) / Math.abs(first) * 100).toFixed(1);
-  const dir = change > 0 ? 'increased' : 'decreased';
-  summEl.textContent = `${section.replace(' (5-Year)','').replace(' (5-Year:','').split(':')[0]} ${dir} by ${Math.abs(change)}% from ${series[0].year} to ${series[series.length-1].year}.`;
-}
-
-// ── Tab Navigation ────────────────────────────────────────────────────────────
-function renderTabNav(tabIdx) {
-  const total = TAB_DEFS.length;
-  const hasPrev = tabIdx > 0;
-  const hasNext = tabIdx < total - 1;
-  const prev = hasPrev ? TAB_DEFS[tabIdx-1].label : '';
-  const next = hasNext ? TAB_DEFS[tabIdx+1].label : '';
-  return `<div class="tab-nav">
-    <button class="tab-nav-btn" ${hasPrev ? `onclick="activateTab(${tabIdx-1})"` : 'disabled'}>← ${hasPrev ? escHtml(prev) : ''}</button>
-    <span class="tab-nav-center">${tabIdx+1} / ${total}</span>
-    <button class="tab-nav-btn" ${hasNext ? `onclick="activateTab(${tabIdx+1})"` : 'disabled'}>${hasNext ? escHtml(next) : ''} →</button>
-  </div>`;
-}
-
+// ── Tab helpers ────────────────────────────────────────────────────────────
 function activateTab(tabIdx) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
-  const tabDef = TAB_DEFS[tabIdx];
-  if (!tabDef) return;
-  const btn = document.getElementById(tabDef.id + '-btn');
-  const pane = document.getElementById(tabDef.id + '-pane');
-  if (btn) btn.classList.add('active');
-  if (pane) pane.classList.add('active');
+  document.querySelectorAll('.tab-pill').forEach((b,i) => b.classList.toggle('active', i===tabIdx));
+  document.querySelectorAll('.tab-pane').forEach((p,i) => p.classList.toggle('active', i===tabIdx));
 }
 
-// ── Utilities ─────────────────────────────────────────────────────────────────
-function escHtml(s) {
-  if (typeof s !== 'string') s = String(s || '');
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function slugify(s) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+// ── Recent assessments ─────────────────────────────────────────────────────
+async function loadRecent() {
+  try {
+    const resp = await fetch('/assessments');
+    const data = await resp.json();
+    const list = data.assessments || data || [];
+    const container = document.getElementById('recent-list');
+    if (!list.length) { container.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:16px 0">No assessments yet.</div>'; return; }
+
+    let go = 0, nogo = 0, revisit = 0;
+    let html = '';
+    for (const a of list.slice(0, 6)) {
+      const status = a.overall_status || 'IN_PROGRESS';
+      const decision = a.decision;
+      const badgeCls = status === 'COMPLETE' ? (decision === 'GO' ? 'b-green' : decision === 'NO_GO' ? 'b-red' : 'b-purple') : status === 'NEEDS_HUMAN_REVIEW' ? 'b-red' : 'b-gold';
+      const badgeTxt = decision || status.replace('_',' ');
+      if (decision === 'GO') go++;
+      else if (decision === 'NO_GO') nogo++;
+      else if (decision === 'REVISIT') revisit++;
+      const title = a.buyer_company && a.target_company ? `${a.buyer_company} → ${a.target_company}` : a.assessment_id?.slice(0,8) || 'Unknown';
+      const elapsed = a.elapsed_sec ? ` · ${Math.round(a.elapsed_sec/60)}m` : '';
+      html += `<div class="recent-item" onclick="loadAssessment('${escAttr(a.assessment_id)}')">
+        <div class="recent-ico">📋</div>
+        <div><div class="recent-title">${escHtml(title)}</div><div class="recent-sub">${escHtml(a.sector||'M&A')}${elapsed}</div></div>
+        <span class="badge ${badgeCls}" style="margin-left:auto;white-space:nowrap">${escHtml(badgeTxt)}</span>
+        <div class="recent-arrow">›</div>
+      </div>`;
+    }
+    container.innerHTML = html;
+    document.getElementById('stat-total').textContent = list.length;
+    document.getElementById('stat-go').textContent = go;
+    document.getElementById('stat-revisit').textContent = revisit;
+    document.getElementById('stat-nogo').textContent = nogo;
+  } catch(e) {
+    document.getElementById('recent-list').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:16px 0">Could not load assessments.</div>';
+  }
 }
 
+async function loadAssessment(id) {
+  currentAssessmentId = id;
+  renderedAgents = new Set(); tabContents = {};
+  agentStartTimes = {}; agentEndTimes = {};
+  Object.values(chartRegistry).forEach(c => { try { c.destroy(); } catch(e){} });
+  chartRegistry = {};
+  document.getElementById('tabs-bar').innerHTML = '';
+  document.getElementById('tabs-content').innerHTML = '';
+
+  try {
+    const resp = await fetch(`/assessments/${id}`);
+    manifest = await resp.json();
+    if (manifest.status === 'not_found') { alert('Assessment not found'); return; }
+
+    const t = manifest.buyer_company && manifest.target_company
+      ? `${manifest.buyer_company} → ${manifest.target_company}` : id.slice(0,8);
+    document.getElementById('assessment-title').textContent = t;
+    document.getElementById('assessment-meta').textContent = `Assessment ID: ${id}`;
+
+    renderGrid(manifest.completed_agents || {}, manifest.phase || 'PHASE_1');
+    updateSummaryMetrics(manifest);
+
+    const completed = manifest.completed_agents || {};
+    for (const [agentId, info] of Object.entries(completed)) {
+      const def = AGENT_FILES[agentId];
+      if (!def) continue;
+      const filename = `${def.index}_${agentId.replace(/-/g,'_')}.md`;
+      try {
+        const r = await fetch(`/assessments/${id}/files/${filename}`);
+        const fd = await r.json();
+        addToTab(def.tabGroup, agentId, fd.content);
+      } catch(e) {}
+    }
+
+    if (manifest.overall_status === 'COMPLETE' || manifest.overall_status === 'NEEDS_HUMAN_REVIEW') {
+      navTo('results');
+    } else {
+      navTo('pipeline');
+      startPolling();
+    }
+  } catch(e) { alert('Failed to load assessment: ' + e.message); }
+}
+
+// ── Reset ──────────────────────────────────────────────────────────────────
 function resetToInput() {
   clearInterval(pollTimer); clearInterval(timerInterval);
   currentAssessmentId = null; renderedAgents = new Set(); tabContents = {};
-  agentStartTimes = {}; agentEndTimes = {}; manifest = null;
+  agentStartTimes = {}; agentEndTimes = {}; manifest = null; bandRoomUrl = null;
   Object.values(chartRegistry).forEach(c => { try { c.destroy(); } catch(e){} });
   chartRegistry = {};
   document.getElementById('tabs-bar').innerHTML = '';
@@ -1199,9 +2052,23 @@ function resetToInput() {
   document.getElementById('buyer-input').value = '';
   document.getElementById('target-input').value = '';
   const btn = document.getElementById('start-btn');
-  btn.disabled = false; btn.textContent = 'Start Assessment';
-  hide('pipeline-section'); hide('results-section'); show('input-section');
+  btn.disabled = false; btn.textContent = 'Start Assessment →';
+  navTo('home');
 }
+
+// ── Utilities ──────────────────────────────────────────────────────────────
+function escHtml(s) {
+  if (typeof s !== 'string') s = String(s||'');
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  if (typeof s !== 'string') s = String(s||'');
+  return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadRecent();
 </script>
 </body>
 </html>

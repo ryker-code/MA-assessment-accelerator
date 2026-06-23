@@ -25,12 +25,24 @@ class AssessmentRequest(BaseModel):
     buyer_company: str
     target_company: str
     assessment_type: str = "LEVEL_2"
+    buyer_sector: str = ""
+    buyer_country: str = ""
+    seller_sector: str = ""
+    seller_country: str = ""
+
+
+class DetectCompanyRequest(BaseModel):
+    company_name: str
 
 
 OUTPUT_DIR = Path(os.environ.get("OUTPUT_DIR", "output"))
 
 
-def _run_assessment_bg(assessment_id: str, target_company: str, buyer_company: str, assessment_type: str):
+def _run_assessment_bg(
+    assessment_id: str, target_company: str, buyer_company: str, assessment_type: str,
+    buyer_sector: str = "", buyer_country: str = "",
+    seller_sector: str = "", seller_country: str = "",
+):
     import os
     from agents.coordinator.agent import run_assessment_sync
     run_assessment_sync(
@@ -39,7 +51,20 @@ def _run_assessment_bg(assessment_id: str, target_company: str, buyer_company: s
         buyer_company=buyer_company,
         assessment_type=assessment_type,
         room_id=os.environ.get("BAND_ROOM_ID", ""),
+        buyer_sector=buyer_sector,
+        buyer_country=buyer_country,
+        seller_sector=seller_sector,
+        seller_country=seller_country,
     )
+
+
+@app.post("/detect-company")
+async def detect_company(req: DetectCompanyRequest):
+    from agents.coordinator.agent import _infer_single_company
+    result = await asyncio.get_event_loop().run_in_executor(
+        None, _infer_single_company, req.company_name
+    )
+    return result
 
 
 @app.post("/assessments")
@@ -52,6 +77,10 @@ async def start_assessment(req: AssessmentRequest, background_tasks: BackgroundT
         req.target_company,
         req.buyer_company,
         req.assessment_type,
+        req.buyer_sector,
+        req.buyer_country,
+        req.seller_sector,
+        req.seller_country,
     )
     return {"assessment_id": assessment_id, "status": "started"}
 

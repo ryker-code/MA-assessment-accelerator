@@ -16,6 +16,13 @@ router = LLMRouter()
 
 def _format_markdown(data: RiskAssessment) -> str:
     rating_emoji = {"RED": "🔴", "AMBER": "🟡", "GREEN": "🟢"}.get(data.overall_risk_rating, "⚪")
+
+    def _sev_key(r):
+        return ({"HIGH": 0, "MEDIUM": 1, "LOW": 2}.get(r.severity, 3),
+                {"HIGH": 0, "MEDIUM": 1, "LOW": 2}.get(r.probability, 3))
+
+    top_risks = sorted(data.risks, key=_sev_key)[:5]
+
     lines = [
         f"## Risk Assessment\n",
         f"**Overall Risk Rating:** {rating_emoji} {data.overall_risk_rating}",
@@ -24,13 +31,13 @@ def _format_markdown(data: RiskAssessment) -> str:
         f"| Risk | Category | Severity | Probability | Cross-Workstream |",
         f"|------|----------|----------|-------------|-----------------|",
     ]
-    for risk in data.risks:
+    for risk in top_risks:
         cw = "✓" if risk.is_cross_workstream else ""
         lines.append(
             f"| {risk.title} | {risk.category} | {risk.severity} | {risk.probability} | {cw} |"
         )
     lines.append(f"\n### Risk Details")
-    for risk in data.risks:
+    for risk in top_risks:
         lines += [
             f"\n#### {risk.title}",
             f"- **Category:** {risk.category}",
@@ -50,16 +57,22 @@ def _format_markdown(data: RiskAssessment) -> str:
 
 def _load_phase1_outputs(assessment_id: str) -> dict:
     output_dir = Path(os.environ.get("OUTPUT_DIR", "output")) / assessment_id
-    phase1_agents = [
-        "country-agent", "sector-agent", "company-agent",
-        "buyer-country-agent", "buyer-sector-agent", "buyer-company-agent",
+    # Maps logical label → (file_index, possible file name stems)
+    agent_slots = [
+        (1, "sell-country",  ["seller-country-agent", "country-agent"]),
+        (2, "sell-sector",   ["seller-sector-agent",  "sector-agent"]),
+        (3, "sell-company",  ["seller-company-agent", "company-agent"]),
+        (4, "buyer-country", ["buyer-country-agent"]),
+        (5, "buyer-sector",  ["buyer-sector-agent"]),
+        (6, "buyer-company", ["buyer-company-agent"]),
     ]
     outputs = {}
-    for agent_name in phase1_agents:
-        filename = f"{['country-agent','sector-agent','company-agent','buyer-country-agent','buyer-sector-agent','buyer-company-agent'].index(agent_name)+1:02d}_{agent_name.replace('-','_')}.md"
-        path = output_dir / filename
-        if path.exists():
-            outputs[agent_name] = path.read_text()
+    for idx, label, names in agent_slots:
+        for name in names:
+            path = output_dir / f"{idx:02d}_{name.replace('-','_')}.md"
+            if path.exists():
+                outputs[label] = path.read_text()
+                break
     return outputs
 
 

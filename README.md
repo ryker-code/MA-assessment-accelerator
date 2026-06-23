@@ -5,7 +5,7 @@
 A multi-agent AI system that compresses a 2-week M&A target assessment into **2–4 hours**. Nine specialized agents coordinate through [Band](https://band.ai) to produce a structured Go/No-Go investment recommendation.
 
 ## Live Demo
-🔗 **[Try it live →](YOUR_DEPLOYED_URL)**
+🔗 **[Try it live →] https://manda-assessment-accelerator.onrender.com/**
 
 ## What It Does
 Enter an acquirer and a target company. Nine AI agents run in parallel and sequentially to produce:

@@ -19,6 +19,8 @@ def _format_markdown(data: CompanyAssessment) -> str:
         f"## {data.company_name} — Buyer Company Assessment (Buy-Side)\n",
         f"**Status:** {data.status} | **Confidence:** {data.confidence_score:.0%}\n",
     ]
+    if data.company_overview:
+        lines += [f"\n### Company Overview", data.company_overview]
     if data.financials_5yr:
         lines.append("### Financials (5-Year)")
         lines.append("| Year | Revenue (USDm) | Rev Growth % | EBITDA (USDm) | EBITDA % | Net Profit (USDm) | NP % | EPS (USD) | CapEx (USDm) | Net Debt (USDm) |")
@@ -81,11 +83,11 @@ async def run_buyer_company_assessment(
     assessment_id: str, buyer_company: str, buyer_country: str
 ) -> dict:
     searches = [
-        f"{buyer_company} balance sheet cash net debt 2024 annual report",
-        f"{buyer_company} acquisition history M&A track record integration",
-        f"{buyer_company} CEO strategic priorities investor day 2024 2025",
-        f"{buyer_company} credit rating debt capacity leverage",
-        f"{buyer_company} share price market cap enterprise value 2024",
+        f"{buyer_company} annual revenue EBITDA financial results 2024 2025",
+        f"{buyer_company} balance sheet cash net debt 2025 annual report",
+        f"{buyer_company} acquisition history M&A track record 2022 2023 2024 2025",
+        f"{buyer_company} CEO strategic priorities investor day 2025 2026",
+        f"{buyer_company} share price market cap enterprise value 2025",
     ]
     research_data = []
     for q in searches:
@@ -118,6 +120,7 @@ async def run_buyer_company_assessment(
         '  "data_sources": ["https://example.com"],\n'
         f'  "company_name": "{buyer_company}",\n'
         '  "is_buy_side": true,\n'
+        '  "company_overview": "- Leading company in its sector with strong competitive position\\n- Core products/services: [list key offerings]\\n- Geographic footprint: [key markets/countries]\\n- Key customers: [top customers]",\n'
         '  "revenue_latest_usd_m": 15000.0,\n'
         '  "ebitda_latest_usd_m": 6000.0,\n'
         '  "ebitda_margin_pct": 40.0,\n'
@@ -132,21 +135,22 @@ async def run_buyer_company_assessment(
         '  "risk_flags": ["Integration risk from prior acquisitions"],\n'
         '  "narrative_summary": "Comprehensive buyer profile narrative here.",\n'
         '  "financials_5yr": [\n'
-        '    {"year": 2020, "revenue": 13000.0, "revenue_growth_pct": -3.0, "ebitda": 5000.0, "ebitda_margin_pct": 38.5, "net_profit": 2000.0, "net_profit_margin_pct": 15.4, "eps": 2.00, "capex": 1800.0, "net_debt": 6000.0},\n'
-        '    {"year": 2021, "revenue": 13500.0, "revenue_growth_pct": 3.8, "ebitda": 5200.0, "ebitda_margin_pct": 38.5, "net_profit": 2100.0, "net_profit_margin_pct": 15.6, "eps": 2.10, "capex": 1900.0, "net_debt": 5800.0},\n'
-        '    {"year": 2022, "revenue": 14000.0, "revenue_growth_pct": 3.7, "ebitda": 5500.0, "ebitda_margin_pct": 39.3, "net_profit": 2200.0, "net_profit_margin_pct": 15.7, "eps": 2.20, "capex": 1950.0, "net_debt": 5500.0},\n'
-        '    {"year": 2023, "revenue": 14500.0, "revenue_growth_pct": 3.6, "ebitda": 5700.0, "ebitda_margin_pct": 39.3, "net_profit": 2300.0, "net_profit_margin_pct": 15.9, "eps": 2.30, "capex": 2000.0, "net_debt": 5200.0},\n'
-        '    {"year": 2024, "revenue": 15000.0, "revenue_growth_pct": 3.4, "ebitda": 6000.0, "ebitda_margin_pct": 40.0, "net_profit": 2400.0, "net_profit_margin_pct": 16.0, "eps": 2.40, "capex": 2000.0, "net_debt": 5000.0}\n'
+        '    {"year": 2021, "revenue": 13000.0, "revenue_growth_pct": 3.0, "ebitda": 5000.0, "ebitda_margin_pct": 38.5, "net_profit": 2000.0, "net_profit_margin_pct": 15.4, "eps": 2.00, "capex": 1800.0, "net_debt": 6000.0},\n'
+        '    {"year": 2022, "revenue": 13500.0, "revenue_growth_pct": 3.8, "ebitda": 5200.0, "ebitda_margin_pct": 38.5, "net_profit": 2100.0, "net_profit_margin_pct": 15.6, "eps": 2.10, "capex": 1900.0, "net_debt": 5800.0},\n'
+        '    {"year": 2023, "revenue": 14000.0, "revenue_growth_pct": 3.7, "ebitda": 5500.0, "ebitda_margin_pct": 39.3, "net_profit": 2200.0, "net_profit_margin_pct": 15.7, "eps": 2.20, "capex": 1950.0, "net_debt": 5500.0},\n'
+        '    {"year": 2024, "revenue": 14500.0, "revenue_growth_pct": 3.6, "ebitda": 5700.0, "ebitda_margin_pct": 39.3, "net_profit": 2300.0, "net_profit_margin_pct": 15.9, "eps": 2.30, "capex": 2000.0, "net_debt": 5200.0},\n'
+        '    {"year": 2025, "revenue": 15000.0, "revenue_growth_pct": 3.4, "ebitda": 6000.0, "ebitda_margin_pct": 40.0, "net_profit": 2400.0, "net_profit_margin_pct": 16.0, "eps": 2.40, "capex": 2000.0, "net_debt": 5000.0}\n'
         '  ],\n'
         '  "cash_position_usd_m": 8000.0,\n'
         '  "acquisition_capacity_usd_m": 12000.0,\n'
         '  "stated_strategic_priorities": ["Expand into emerging markets", "Digital transformation"],\n'
-        '  "previous_acquisitions": ["Acquisition 1 (2021)", "Acquisition 2 (2023)"]\n'
+        '  "previous_acquisitions": ["Acquisition 1 (2022)", "Acquisition 2 (2024)"]\n'
         "}\n\n"
         "Rules: is_buy_side must be true. Populate ALL buy-side specific fields. "
         "acquisition_capacity = cash + conservative debt headroom (e.g. 1-2x current EBITDA). "
-        "financials_5yr: provide actual 5-year financial history. All monetary values in USD millions. "
-        "Return ONLY JSON."
+        "financials_5yr MUST cover years 2021, 2022, 2023, 2024, 2025 — do NOT use 2020. "
+        "company_overview: 4-6 concise bullet points starting with '- ' covering: what the company does, key products/services, geographic footprint, key customers/partners. "
+        "All monetary values in USD millions. Return ONLY JSON."
     )
 
     response = router.complete(
@@ -158,8 +162,51 @@ async def run_buyer_company_assessment(
     json_str = extract_json(response)
 
     try:
-        structured = CompanyAssessment.model_validate_json(json_str)
-    except Exception:
+        import json as _json
+        parsed = _json.loads(json_str)
+        # Backfill required envelope fields the model may omit
+        parsed.setdefault("agent", "buyer-company-agent")
+        parsed.setdefault("assessment_id", assessment_id)
+        parsed.setdefault("target_company", "")
+        parsed.setdefault("buyer_company", buyer_company)
+        parsed.setdefault("timestamp", datetime.utcnow().isoformat() + "Z")
+        parsed.setdefault("status", "COMPLETE")
+        parsed.setdefault("confidence_score", 0.8)
+        parsed.setdefault("company_name", buyer_company)
+        parsed.setdefault("is_buy_side", True)
+        parsed.setdefault("company_overview", None)
+        parsed.setdefault("key_shareholders", [])
+        parsed.setdefault("recent_strategic_moves", [])
+        parsed.setdefault("sector_kpis", {})
+        parsed.setdefault("risk_flags", [])
+        # Coerce null list fields to empty list
+        for field in ("financials_5yr", "key_shareholders", "recent_strategic_moves", "risk_flags"):
+            if parsed.get(field) is None:
+                parsed[field] = []
+        # Coerce null float fields to 0.0
+        for field in ("revenue_latest_usd_m", "ebitda_latest_usd_m", "ebitda_margin_pct",
+                      "net_debt_usd_m", "net_debt_to_ebitda", "capex_usd_m",
+                      "revenue_growth_rate_pct", "management_quality_score"):
+            if parsed.get(field) is None:
+                parsed[field] = 0.0
+        # Normalize key_shareholders: model sometimes returns list of strings instead of dicts
+        raw_sh = parsed.get("key_shareholders", [])
+        parsed["key_shareholders"] = [
+            s if isinstance(s, dict) else {"name": str(s), "stake_pct": 0, "type": "unknown"}
+            for s in raw_sh
+        ]
+        # Normalize previous_acquisitions: model sometimes returns list of dicts instead of strings
+        raw_acq = parsed.get("previous_acquisitions") or []
+        parsed["previous_acquisitions"] = [
+            a if isinstance(a, str) else f"{a.get('company', str(a))} ({a.get('year', a.get('date', ''))})"
+            for a in raw_acq
+        ]
+        structured = CompanyAssessment.model_validate(parsed)
+    except Exception as _parse_err:
+        import traceback as _tb
+        import logging as _log
+        _log.getLogger(__name__).error("buyer-company-agent parse failed: %s\n%s\njson_str[:300]=%r",
+                                       _parse_err, _tb.format_exc(), json_str[:300])
         structured = CompanyAssessment(
             agent="buyer-company-agent",
             assessment_id=assessment_id,

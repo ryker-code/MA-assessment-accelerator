@@ -58,6 +58,7 @@ class SectorAssessment(AgentOutput):
 class CompanyAssessment(AgentOutput):
     company_name: str
     is_buy_side: bool
+    company_overview: Optional[str] = None
     revenue_latest_usd_m: float
     ebitda_latest_usd_m: float
     ebitda_margin_pct: float
@@ -95,7 +96,7 @@ class RiskAssessment(AgentOutput):
 
 
 class ValueCreationAvenue(BaseModel):
-    category: Literal["NEW_PRODUCTS", "NEW_CUSTOMERS", "ASSET_MONETIZATION", "COST_SYNERGY", "REVENUE_SYNERGY"]
+    category: Literal["NEW_PRODUCTS", "NEW_CUSTOMERS", "ASSET_MONETIZATION", "COST_SYNERGY", "REVENUE_SYNERGY", "REGULATORY_SYNERGY", "FINANCIAL_EFFICIENCY"]
     description: str
     estimated_impact: Literal["HIGH", "MEDIUM", "LOW"]
     requires_integration: bool
@@ -106,6 +107,7 @@ class DealRationale(AgentOutput):
     revisit_timeframe: Optional[str] = None
     decision_rationale: list[str]
     value_creation_avenues: list[ValueCreationAvenue]
+    comparable_transactions: list[dict] = []
     ev_ebitda_comparable_range: dict
     implied_valuation_range_usd_m: dict
     key_conditions_for_reversal: list[str]

@@ -4,55 +4,64 @@
 agents:
   coordinator:
     provider: google_gemini
-    model: gemma-4-31b-it
+    model: gemma-4-26b-a4b-it
     temperature: 0.2
     max_tokens: 2048
     use_cache: true
 
-  country_agent:
+  company_detector:
     provider: featherless
-    model: Qwen/Qwen3-14B
+    model: google/gemma-4-E4B-it   # 4B — fast, ungated, same family as buyer agents
+    temperature: 0.1   # deterministic factual lookup
+    max_tokens: 64     # only needs {"sector": "...", "country": "..."}
+    use_cache: true
+    thinking: false    # no reasoning needed for factual company lookup
+    use_tools: false   # no web search — answer from training knowledge for speed
+
+  country_agent:
+    provider: google_gemini
+    model: gemma-4-31b-it
     temperature: 0.3
     max_tokens: 4096
     use_cache: true
 
   sector_agent:
-    provider: featherless
-    model: Qwen/Qwen3-14B
+    provider: google_gemini
+    model: gemma-4-31b-it
     temperature: 0.3
     max_tokens: 4096
     use_cache: true
 
   company_agent:
     provider: google_gemini
-    model: gemini-3.1-flash-lite
+    model: gemma-4-31b-it
     temperature: 0.2
-    max_tokens: 4096
+    max_tokens: 8000
     use_cache: true
     # switched from google_gemini/gemma-4-31b-it — ThinkingConfig+GoogleSearch together
     # corrupt JSON output with grounding citations; aiml_api OpenAI-compat path is clean
 
   buyer_country_agent:
     provider: featherless
-    model: Qwen/Qwen3-14B
-    temperature: 0.3
+    model: google/gemma-4-31B-it
+    temperature: 0.3   # Qwen3 thinking mode requires 0.6 (Alibaba recommendation)
     max_tokens: 4096
     use_cache: true
 
   buyer_sector_agent:
     provider: featherless
-    model: Qwen/Qwen3-14B
-    temperature: 0.3
+    model: google/gemma-4-31B-it
+    temperature: 0.3   # Qwen3 thinking mode requires 0.6
     max_tokens: 4096
     use_cache: true
 
   buyer_company_agent:
-    provider: google_gemini
-    model: gemma-4-31b-it
-    temperature: 0.2
-    max_tokens: 4096
+    provider: featherless
+    model: google/gemma-4-31B-it
+    temperature: 0.2   # Qwen3 thinking mode requires 0.6
+    max_tokens: 8000   # needs full JSON with financials, KPIs, shareholders (same as company_agent)
     use_cache: true
-    # switched from featherless/Qwen3-14B — 429 concurrency limit when 5 agents hit Featherless in parallel
+    # switched from google/gemma-4-26B-A4B-it — MoE cold-start hangs on Featherless
 
   risk_agent:
     provider: google_gemini

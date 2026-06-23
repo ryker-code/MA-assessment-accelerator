@@ -80,13 +80,35 @@ def _infer_company_context(company: str, buyer_company: str) -> dict:
         '  "buyer_country": "Saudi Arabia",\n'
         '  "buyer_sector": "Telecommunications"\n'
         '}\n'
-        "Infer the most likely home country and primary sector for each company. Return ONLY JSON."
+        "Infer the most likely home country and PRIMARY sector for each company. "
+        "Use specific sector names (e.g. 'Passive Infrastructure' for tower companies like IHS or Crown Castle, "
+        "'Cloud Computing' for hyperscalers, 'AI Infrastructure' for GPU cloud providers like CoreWeave). "
+        "Return ONLY JSON."
     )
     try:
         response = router.complete("coordinator", [{"role": "user", "content": prompt}])
         return json.loads(extract_json(response))
     except Exception:
         return {"target_country": "", "target_sector": "", "buyer_country": "", "buyer_sector": ""}
+
+
+def _infer_single_company(company_name: str) -> dict:
+    from agents.shared.llm_utils import extract_json
+    prompt = (
+        f"What is the PRIMARY business sector and home country of headquarters for: {company_name}\n\n"
+        "Return ONLY valid JSON, no other text:\n"
+        '{"sector": "<sector>", "country": "<country>"}\n\n'
+        "Sector examples: 'Telecommunications Equipment' for Ericsson/Nokia/Ciena; "
+        "'AI Infrastructure' for CoreWeave/Lambda Labs; 'Cloud Computing' for AWS/Azure/GCP; "
+        "'Passive Infrastructure' for IHS Towers/Crown Castle; 'Satellite Communications' for Starlink; "
+        "'Semiconductor' for NVIDIA/AMD/Intel; 'Database Software' for MongoDB/Oracle/Snowflake. "
+        "Country is the HQ country, e.g. Ericsson→Sweden, Nokia→Finland, Ciena→United States."
+    )
+    try:
+        response = router.complete("company_detector", [{"role": "user", "content": prompt}])
+        return json.loads(extract_json(response))
+    except Exception:
+        return {"sector": "", "country": ""}
 
 
 def _get_manifest(assessment_id: str) -> dict:
@@ -145,18 +167,26 @@ def run_assessment_sync(
     buyer_company: str,
     assessment_type: str,
     room_id: str = "",
+    buyer_sector: str = "",
+    buyer_country: str = "",
+    seller_sector: str = "",
+    seller_country: str = "",
 ) -> dict:
     """Fully synchronous pipeline — safe to call from any thread."""
     output_dir = Path(os.environ.get("OUTPUT_DIR", "output")) / assessment_id
     output_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = output_dir / "00_assessment_manifest.json"
 
-    # Infer context
-    context = _infer_company_context(target_company, buyer_company)
-    target_country = context.get("target_country", "")
-    target_sector = context.get("target_sector", "")
-    buyer_country = context.get("buyer_country", "")
-    buyer_sector = context.get("buyer_sector", "")
+    # Use pre-filled sector/country if provided; otherwise infer via LLM
+    if buyer_sector and buyer_country and seller_sector and seller_country:
+        target_country = seller_country
+        target_sector = seller_sector
+    else:
+        context = _infer_company_context(target_company, buyer_company)
+        target_country = seller_country or context.get("target_country", "")
+        target_sector = seller_sector or context.get("target_sector", "")
+        buyer_country = buyer_country or context.get("buyer_country", "")
+        buyer_sector = buyer_sector or context.get("buyer_sector", "")
 
     # Auto-create a Band room if none provided
     if not room_id:
@@ -185,7 +215,7 @@ def run_assessment_sync(
         f"Target: {target_company} | {target_country} | {target_sector}\n"
         f"Buyer: {buyer_company} | {buyer_country} | {buyer_sector}\n"
         f"Dispatching 6 parallel research agents now.",
-        mention_agents=["country-agent", "sector-agent", "company-agent",
+        mention_agents=["seller-country-agent", "seller-sector-agent", "seller-company-agent",
                         "buyer-country-agent", "buyer-sector-agent", "buyer-company-agent"])
 
     # --- PHASE 1: 6 agents in parallel threads ---
@@ -197,12 +227,12 @@ def run_assessment_sync(
     from agents.buyer_company_agent.agent import run_buyer_company_assessment
 
     phase1_work = [
-        (run_country_assessment,       (assessment_id, target_company, target_country),          "country-agent",       1, f"Country Assessment: {target_country}"),
-        (run_sector_assessment,        (assessment_id, target_company, target_sector, target_country), "sector-agent",  2, f"Sector Assessment: {target_sector}"),
-        (run_company_assessment,       (assessment_id, target_company, buyer_company),            "company-agent",       3, f"Company Assessment: {target_company}"),
-        (run_buyer_country_assessment, (assessment_id, buyer_company, buyer_country, target_country), "buyer-country-agent", 4, f"Buyer Country: {buyer_country}"),
+        (run_country_assessment,       (assessment_id, target_company, target_country),               "seller-country-agent", 1, f"Country Assessment: {target_country}"),
+        (run_sector_assessment,        (assessment_id, target_company, target_sector, target_country), "seller-sector-agent",  2, f"Sector Assessment: {target_sector}"),
+        (run_company_assessment,       (assessment_id, target_company, buyer_company),                 "seller-company-agent", 3, f"Company Assessment: {target_company}"),
+        (run_buyer_country_assessment, (assessment_id, buyer_company, buyer_country, target_country),  "buyer-country-agent",  4, f"Buyer Country: {buyer_country}"),
         (run_buyer_sector_assessment,  (assessment_id, buyer_company, buyer_country, buyer_sector, target_country), "buyer-sector-agent", 5, f"Buyer Sector: {buyer_sector}"),
-        (run_buyer_company_assessment, (assessment_id, buyer_company, buyer_country),             "buyer-company-agent", 6, f"Buyer Company: {buyer_company}"),
+        (run_buyer_company_assessment, (assessment_id, buyer_company, buyer_country),                  "buyer-company-agent",  6, f"Buyer Company: {buyer_company}"),
     ]
 
     import time as _time

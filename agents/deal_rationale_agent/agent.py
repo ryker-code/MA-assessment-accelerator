@@ -28,7 +28,7 @@ def _format_markdown(data: DealRationale) -> str:
     ]
     if data.revisit_timeframe:
         lines.append(f"**Revisit Timeframe:** {data.revisit_timeframe}\n")
-    lines += [f"### Top 5 Decision Rationale"]
+    lines += [f"### Deal Rationale"]
     for i, point in enumerate(data.decision_rationale[:5], 1):
         lines.append(f"{i}. {point}")
     lines += [f"\n### Value Creation Avenues"]
@@ -38,10 +38,25 @@ def _format_markdown(data: DealRationale) -> str:
             f"- **{avenue.category}** {impact_icon}: {avenue.description}"
             + (" _(requires integration)_" if avenue.requires_integration else "")
         )
+    if data.comparable_transactions:
+        lines += [f"\n### Comparable Transactions"]
+        lines.append("| Acquirer | Target | Year | EV/EBITDA | Deal Value |")
+        lines.append("|----------|--------|------|-----------|------------|")
+        for t in data.comparable_transactions:
+            ev_mult = t.get("ev_ebitda", "—")
+            deal_val = t.get("deal_value_str") or (
+                f"${t['deal_value_usd_bn']}B" if t.get("deal_value_usd_bn")
+                else f"${t['deal_value_usd_m']}M" if t.get("deal_value_usd_m")
+                else "—"
+            )
+            lines.append(
+                f"| {t.get('acquirer','—')} | {t.get('target','—')} | {t.get('year','—')} "
+                f"| {ev_mult}x | {deal_val} |"
+            )
     ev = data.ev_ebitda_comparable_range
     val = data.implied_valuation_range_usd_m
     lines += [
-        f"\n### Valuation",
+        f"\n### Implied Valuation Range",
         f"- **EV/EBITDA Range:** {ev.get('low', 'N/A')}x – {ev.get('high', 'N/A')}x (median: {ev.get('median', 'N/A')}x)",
         f"- **Implied Enterprise Value:** USD {val.get('low', 'N/A')}m – USD {val.get('high', 'N/A')}m",
         f"\n### Conditions for Reversal",
@@ -56,17 +71,23 @@ def _format_markdown(data: DealRationale) -> str:
 
 def _load_all_outputs(assessment_id: str) -> str:
     output_dir = Path(os.environ.get("OUTPUT_DIR", "output")) / assessment_id
-    all_agents = [
-        "country-agent", "sector-agent", "company-agent",
-        "buyer-country-agent", "buyer-sector-agent", "buyer-company-agent",
-        "risk-agent",
+    # Each tuple: (file_index, label, list of possible name stems)
+    agent_slots = [
+        (1, "sell-country",  ["seller-country-agent", "country-agent"]),
+        (2, "sell-sector",   ["seller-sector-agent",  "sector-agent"]),
+        (3, "sell-company",  ["seller-company-agent", "company-agent"]),
+        (4, "buyer-country", ["buyer-country-agent"]),
+        (5, "buyer-sector",  ["buyer-sector-agent"]),
+        (6, "buyer-company", ["buyer-company-agent"]),
+        (7, "risk",          ["risk-agent"]),
     ]
     parts = []
-    for i, agent_name in enumerate(all_agents, 1):
-        filename = f"{i:02d}_{agent_name.replace('-', '_')}.md"
-        path = output_dir / filename
-        if path.exists():
-            parts.append(f"### {agent_name}\n{path.read_text()[:2000]}")
+    for idx, label, names in agent_slots:
+        for name in names:
+            path = output_dir / f"{idx:02d}_{name.replace('-', '_')}.md"
+            if path.exists():
+                parts.append(f"### {label}\n{path.read_text()[:2000]}")
+                break
     return "\n\n---\n\n".join(parts)
 
 
@@ -118,7 +139,14 @@ async def run_deal_rationale(assessment_id: str, target_company: str, buyer_comp
         '    "Rationale point 5"\n'
         '  ],\n'
         '  "value_creation_avenues": [\n'
-        '    {"category": "NEW_CUSTOMERS", "description": "Specific buyer gap + target strength", "estimated_impact": "HIGH", "requires_integration": false}\n'
+        '    {"category": "REVENUE_SYNERGY", "description": "Cross-sell target customers into buyer product portfolio across geography X", "estimated_impact": "HIGH", "requires_integration": false},\n'
+        '    {"category": "COST_SYNERGY", "description": "Consolidate back-office functions (HR, Finance, IT) saving ~$XXm pa", "estimated_impact": "MEDIUM", "requires_integration": true},\n'
+        '    {"category": "REGULATORY_SYNERGY", "description": "Leverage buyer\'s favorable regulatory position in market Y to expand target\'s operations", "estimated_impact": "MEDIUM", "requires_integration": false},\n'
+        '    {"category": "FINANCIAL_EFFICIENCY", "description": "Combined entity achieves investment-grade rating, lowering cost of debt by ~100bps on $Xbn", "estimated_impact": "HIGH", "requires_integration": true}\n'
+        '  ],\n'
+        '  "comparable_transactions": [\n'
+        '    {"acquirer": "Company A", "target": "Company B", "year": 2023, "ev_ebitda": 8.5, "deal_value_str": "$1.2B"},\n'
+        '    {"acquirer": "Company C", "target": "Company D", "year": 2024, "ev_ebitda": 9.2, "deal_value_str": "$800M"}\n'
         '  ],\n'
         '  "ev_ebitda_comparable_range": {"low": 6.0, "high": 9.5, "median": 7.8},\n'
         '  "implied_valuation_range_usd_m": {"low": 900.0, "high": 1425.0},\n'
@@ -127,9 +155,16 @@ async def run_deal_rationale(assessment_id: str, target_company: str, buyer_comp
         '  "strategic_fit_score": 7.5\n'
         "}\n\n"
         "Rules:\n"
-        "- decision: GO if strategic_fit_score >= 7 AND risk_rating != RED; NO_GO if score < 4 OR risk=RED; REVISIT otherwise\n"
-        "- decision_rationale: exactly 5 bullet points referencing specific data from prior outputs\n"
-        "- category must be: NEW_PRODUCTS, NEW_CUSTOMERS, ASSET_MONETIZATION, COST_SYNERGY, or REVENUE_SYNERGY\n"
+        "- decision: GO if strategic_fit_score >= 7 AND risk_rating != RED (or all HIGH risks have mitigants); "
+        "NO_GO only if strategic_fit_score < 4 OR (risk=RED AND risks have no credible mitigants); REVISIT otherwise. "
+        "High strategic fit (>= 8) can justify GO even with AMBER risk if risks are manageable. Be realistic — most high-quality deals are GO or REVISIT, not NO_GO.\n"
+        "- decision_rationale: exactly 5 bullet points that each reference specific data points from prior outputs, "
+        "covering: strategic fit, value creation potential, valuation attractiveness, risk balance, and next steps\n"
+        "- value_creation_avenues: explore ALL relevant dimensions: revenue synergies (customer/product/geography), "
+        "cost synergies (back-office, procurement, shared infrastructure), regulatory/policy synergies, "
+        "capital/financial efficiencies (credit rating uplift, lower cost of capital, improved balance sheet). "
+        "Include at least 4-6 avenues. category must be: NEW_PRODUCTS, NEW_CUSTOMERS, ASSET_MONETIZATION, COST_SYNERGY, REVENUE_SYNERGY, REGULATORY_SYNERGY, or FINANCIAL_EFFICIENCY\n"
+        "- comparable_transactions: find 3-5 actual real-world M&A transactions in the same sector with deal mechanics (EV/EBITDA multiple, deal size). Use your research data.\n"
         "- estimated_impact must be: HIGH, MEDIUM, or LOW\n"
         "- Return ONLY JSON"
     )
@@ -143,8 +178,39 @@ async def run_deal_rationale(assessment_id: str, target_company: str, buyer_comp
     json_str = extract_json(response)
 
     try:
-        structured = DealRationale.model_validate_json(json_str)
-    except Exception:
+        import json as _json
+        parsed = _json.loads(json_str)
+        parsed.setdefault("agent", "deal-rationale-agent")
+        parsed.setdefault("assessment_id", assessment_id)
+        parsed.setdefault("target_company", target_company)
+        parsed.setdefault("buyer_company", buyer_company)
+        parsed.setdefault("timestamp", datetime.utcnow().isoformat() + "Z")
+        parsed.setdefault("status", "COMPLETE")
+        parsed.setdefault("confidence_score", 0.85)
+        parsed.setdefault("decision_rationale", [])
+        parsed.setdefault("value_creation_avenues", [])
+        parsed.setdefault("comparable_transactions", [])
+        parsed.setdefault("ev_ebitda_comparable_range", {})
+        parsed.setdefault("implied_valuation_range_usd_m", {})
+        parsed.setdefault("key_conditions_for_reversal", [])
+        parsed.setdefault("recommended_next_steps", [])
+        # Coerce null floats
+        if parsed.get("strategic_fit_score") is None:
+            parsed["strategic_fit_score"] = 5.0
+        # Normalize VCA categories — allow new categories, drop unknown ones
+        VALID_CATS = {"NEW_PRODUCTS", "NEW_CUSTOMERS", "ASSET_MONETIZATION", "COST_SYNERGY",
+                      "REVENUE_SYNERGY", "REGULATORY_SYNERGY", "FINANCIAL_EFFICIENCY"}
+        vcas = parsed.get("value_creation_avenues") or []
+        parsed["value_creation_avenues"] = [
+            v for v in vcas
+            if isinstance(v, dict) and v.get("category") in VALID_CATS
+        ]
+        structured = DealRationale.model_validate(parsed)
+    except Exception as _parse_err:
+        import traceback as _tb
+        import logging as _log
+        _log.getLogger(__name__).error("deal-rationale-agent parse failed: %s\n%s\njson_str[:300]=%r",
+                                       _parse_err, _tb.format_exc(), json_str[:300])
         structured = DealRationale(
             agent="deal-rationale-agent",
             assessment_id=assessment_id,

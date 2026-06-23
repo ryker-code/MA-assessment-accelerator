@@ -69,15 +69,7 @@ if (cmd === 'screenshot') {
     await page.goto(BASE, { waitUntil: 'networkidle', timeout: 15000 });
 
     await page.evaluate(async (id) => {
-      window.currentAssessmentId = id;
-      window.show('pipeline-section');
-      window.hide('input-section');
-      window.renderGrid({}, 'PHASE_1');
-      const resp = await fetch(`/assessments/${id}`);
-      const m = await resp.json();
-      window.manifest = m;
-      await window.updateUI(m);
-      window.hide('pipeline-section');
+      await window.loadAssessment(id);
     }, id);
 
     // Wait for all agent file fetches to settle
@@ -89,7 +81,7 @@ if (cmd === 'screenshot') {
 
     // Print tab summary
     const tabs = await page.evaluate(() =>
-      Array.from(document.querySelectorAll('#tabs-bar .tab')).map(t => t.textContent.trim())
+      Array.from(document.querySelectorAll('#tabs-bar .tab-pill')).map(t => t.textContent.trim())
     );
     console.log('Tabs rendered:', tabs.join(', '));
   }

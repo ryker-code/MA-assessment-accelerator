@@ -1,0 +1,48 @@
+{
+  "assessment_id": "f825ee11-6d8e-4fd5-9ab8-6266d510e669",
+  "buyer_company": "Coreweave",
+  "target_company": "MongoDB",
+  "assessment_type": "LEVEL_2",
+  "started_at": "2026-06-22T03:29:04.270528Z",
+  "phase": "COMPLETE",
+  "completed_agents": {
+    "seller-company-agent": {
+      "completed_at": "2026-06-22T03:31:00.181065Z"
+    },
+    "buyer-country-agent": {
+      "completed_at": "2026-06-22T03:31:18.083129Z"
+    },
+    "seller-sector-agent": {
+      "completed_at": "2026-06-22T03:32:13.839179Z"
+    },
+    "buyer-company-agent": {
+      "completed_at": "2026-06-22T03:33:39.243746Z"
+    },
+    "buyer-sector-agent": {
+      "completed_at": "2026-06-22T03:34:25.457410Z"
+    },
+    "seller-country-agent": {
+      "completed_at": "2026-06-22T03:34:33.792302Z"
+    },
+    "risk-agent": {
+      "completed_at": "2026-06-22T03:35:51.729171Z"
+    },
+    "deal-rationale-agent": {
+      "file": "output/f825ee11-6d8e-4fd5-9ab8-6266d510e669/08_deal_rationale_agent.md",
+      "completed_at": "2026-06-22T03:48:14.163203Z"
+    }
+  },
+  "overall_status": "NEEDS_HUMAN_REVIEW",
+  "target_country": "USA",
+  "target_sector": "Database Software",
+  "buyer_country": "USA",
+  "buyer_sector": "AI Infrastructure",
+  "room_id": "fb91aa45-f3e9-40e8-9421-5caee966fd3d",
+  "band_room_url": "https://app.band.ai/chat/fb91aa45-f3e9-40e8-9421-5caee966fd3d",
+  "completed_at": "2026-06-22T03:36:55.333373Z",
+  "decision": "GO",
+  "strategic_fit_score": 9.0,
+  "implied_valuation_range_usd_m": {"low": 13500.0, "high": 20250.0},
+  "ev_ebitda_comparable_range": {"low": 30.0, "high": 45.0, "median": 37.5},
+  "overall_risk_rating": "AMBER"
+}

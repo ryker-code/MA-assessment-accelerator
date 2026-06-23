@@ -42,11 +42,11 @@ async def run_buyer_sector_assessment(
     assessment_id: str, buyer_company: str, buyer_country: str, buyer_sector: str, target_country: str = ""
 ) -> dict:
     searches = [
-        f"{buyer_company} market share revenue 2024 {buyer_sector}",
-        f"{buyer_company} technology gaps strategic priorities 2025 investor day",
+        f"{buyer_company} market share revenue 2024 2025 {buyer_sector}",
+        f"{buyer_company} technology gaps strategic priorities 2025 2026 investor day",
         f"{buyer_company} antitrust regulatory {target_country} expansion approval",
-        f"{buyer_sector} consolidation M&A trends 2024 2025 cross-border",
-        f"{buyer_company} international expansion strategy emerging markets",
+        f"{buyer_sector} consolidation M&A trends 2025 2026 cross-border",
+        f"{buyer_company} international expansion strategy 2025 2026",
     ]
     research_data = []
     for q in searches:
@@ -87,12 +87,15 @@ async def run_buyer_sector_assessment(
         '  "regulatory_risk": "LOW",\n'
         '  "key_regulations": ["Antitrust review required for cross-border deals"],\n'
         '  "technology_disruption_risk": "MEDIUM",\n'
-        '  "sector_specific_kpis": {"buyer_market_share_pct": 30.0, "gap_vs_leader_pct": 10.0},\n'
+        '  "sector_specific_kpis": {"REPLACE_WITH_RELEVANT_KPIs_FOR_THIS_SECTOR": 0.0},\n'
         '  "risk_flags": ["Antitrust risk in target market"],\n'
         '  "narrative_summary": "Frame around: why does buyer need exposure to target sector/market?"\n'
         "}\n\n"
-        "Rules: regulatory_risk and technology_disruption_risk must be HIGH, MEDIUM, or LOW. "
-        "sector_specific_kpis should highlight buyer's competitive gaps. Return ONLY JSON."
+        f"CRITICAL: sector_specific_kpis must contain 4-6 KPIs most relevant to {buyer_sector} showing buyer's competitive position. "
+        "For telecom buyer: use buyer_market_share_pct, gap_vs_leader_pct, ARPU_USD, mobile_subscribers_m, broadband_penetration_pct. "
+        "For tower/passive infra buyer: use tenancy_ratio, towers_owned, revenue_per_site_usd_monthly, buyer_market_share_pct, gap_vs_leader_pct. "
+        "For cloud/AI buyer: use gpu_utilization_pct, compute_cost_per_hour_usd, buyer_market_share_pct, gap_vs_leader_pct. "
+        "Rules: regulatory_risk and technology_disruption_risk must be HIGH, MEDIUM, or LOW. Return ONLY JSON."
     )
 
     response = router.complete(

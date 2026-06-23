@@ -62,10 +62,10 @@ def _format_markdown(data: CountryAssessment) -> str:
 
 async def run_country_assessment(assessment_id: str, company: str, country: str) -> dict:
     searches = [
-        f"{country} GDP growth rate 2020 2024 IMF World Bank",
-        f"{country} inflation rate currency exchange rate trend 2024",
-        f"{country} corporate tax rate foreign investment M&A",
-        f"{country} political stability ease of doing business 2024",
+        f"{country} GDP growth rate 2021 2022 2023 2024 2025 2026 IMF World Bank",
+        f"{country} inflation rate currency exchange rate 2021 2022 2023 2024 2025 2026",
+        f"{country} corporate tax rate foreign investment M&A 2025 2026",
+        f"{country} political stability ease of doing business 2025 2026",
         f"{country} currency repatriation capital controls foreign investment",
     ]
     research_data = []
@@ -89,7 +89,7 @@ async def run_country_assessment(assessment_id: str, company: str, country: str)
         "Produce a country assessment as a single JSON object with EXACTLY this structure "
         "(replace example values with real data from the research above):\n"
         "{\n"
-        f'  "agent": "country-agent",\n'
+        f'  "agent": "seller-country-agent",\n'
         f'  "assessment_id": "{assessment_id}",\n'
         f'  "target_company": "{company}",\n'
         '  "buyer_company": "",\n'
@@ -99,9 +99,9 @@ async def run_country_assessment(assessment_id: str, company: str, country: str)
         '  "human_review_required": false,\n'
         '  "data_sources": ["https://example.com"],\n'
         f'  "country": "{country}",\n'
-        '  "gdp_growth_5yr": [{"year": 2020, "value": -0.5, "unit": "%"}, {"year": 2021, "value": 3.9, "unit": "%"}, {"year": 2022, "value": 6.1, "unit": "%"}, {"year": 2023, "value": 2.1, "unit": "%"}, {"year": 2024, "value": 2.5, "unit": "%"}],\n'
-        '  "inflation_5yr": [{"year": 2020, "value": 2.1, "unit": "%"}, {"year": 2021, "value": 3.4, "unit": "%"}, {"year": 2022, "value": 7.0, "unit": "%"}, {"year": 2023, "value": 4.5, "unit": "%"}, {"year": 2024, "value": 3.2, "unit": "%"}],\n'
-        '  "currency_exchange_5yr": [{"year": 2020, "value": 160.0, "unit": ""}, {"year": 2021, "value": 175.0, "unit": ""}, {"year": 2022, "value": 200.0, "unit": ""}, {"year": 2023, "value": 280.0, "unit": ""}, {"year": 2024, "value": 278.0, "unit": ""}],\n'
+        '  "gdp_growth_5yr": [{"year": 2021, "value": 3.9, "unit": "%"}, {"year": 2022, "value": 6.1, "unit": "%"}, {"year": 2023, "value": 2.1, "unit": "%"}, {"year": 2024, "value": 2.5, "unit": "%"}, {"year": 2025, "value": 2.3, "unit": "%"}, {"year": 2026, "value": 2.4, "unit": "%"}],\n'
+        '  "inflation_5yr": [{"year": 2021, "value": 3.4, "unit": "%"}, {"year": 2022, "value": 7.0, "unit": "%"}, {"year": 2023, "value": 4.5, "unit": "%"}, {"year": 2024, "value": 3.2, "unit": "%"}, {"year": 2025, "value": 2.8, "unit": "%"}, {"year": 2026, "value": 2.5, "unit": "%"}],\n'
+        '  "currency_exchange_5yr": [{"year": 2021, "value": 175.0, "unit": ""}, {"year": 2022, "value": 200.0, "unit": ""}, {"year": 2023, "value": 280.0, "unit": ""}, {"year": 2024, "value": 278.0, "unit": ""}, {"year": 2025, "value": 285.0, "unit": ""}, {"year": 2026, "value": 290.0, "unit": ""}],\n'
         '  "gdp_nominal_usd_bn": 338.0,\n'
         '  "inflation_rate_latest": 4.5,\n'
         '  "currency_code": "PKR",\n'
@@ -134,7 +134,7 @@ async def run_country_assessment(assessment_id: str, company: str, country: str)
     except Exception:
         # Partial result fallback
         structured = CountryAssessment(
-            agent="country-agent",
+            agent="seller-country-agent",
             assessment_id=assessment_id,
             target_company=company,
             buyer_company="",
@@ -176,7 +176,7 @@ async def handle_message(message: dict):
 
     file_path = save_agent_output(
         assessment_id=assessment_id,
-        agent_name="country-agent",
+        agent_name="seller-country-agent",
         file_index=1,
         title=f"Country Assessment: {country}",
         content=result["markdown"],
@@ -185,7 +185,7 @@ async def handle_message(message: dict):
 
     await post_completion(
         room_id=params.get("room_id", ""),
-        agent_name="country-agent",
+        agent_name="seller-country-agent",
         output_schema=result["structured"],
         file_path=file_path,
     )

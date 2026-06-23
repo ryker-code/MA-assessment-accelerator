@@ -43,6 +43,8 @@ class LLMRouter:
         temperature = cfg.get("temperature", 0.3)
         max_tokens = cfg.get("max_tokens", 4096)
         use_cache = cfg.get("use_cache", True)
+        thinking = cfg.get("thinking", None)    # None = auto-detect from model name
+        use_tools = cfg.get("use_tools", True)  # False = skip web_search tool entirely
 
         cache_key = self._cache_key(model, messages)
         if use_cache:
@@ -50,25 +52,25 @@ class LLMRouter:
             if cached is not None:
                 return cached
 
-        response = self._call_with_retry(provider, model, messages, system_prompt, temperature, max_tokens)
+        response = self._call_with_retry(provider, model, messages, system_prompt, temperature, max_tokens, thinking, use_tools)
 
         if use_cache:
             self._write_cache(cache_key, response)
         return response
 
-    def _call_with_retry(self, provider, model, messages, system_prompt, temperature, max_tokens) -> str:
+    def _call_with_retry(self, provider, model, messages, system_prompt, temperature, max_tokens, thinking=None, use_tools=True) -> str:
         delays = [1, 2, 4]
         last_error = None
         for i, delay in enumerate(delays):
             try:
-                return self._call(provider, model, messages, system_prompt, temperature, max_tokens)
+                return self._call(provider, model, messages, system_prompt, temperature, max_tokens, thinking, use_tools)
             except Exception as e:
                 last_error = e
                 if i < len(delays) - 1:
                     time.sleep(delay)
         raise last_error
 
-    def _call(self, provider, model, messages, system_prompt, temperature, max_tokens) -> str:
+    def _call(self, provider, model, messages, system_prompt, temperature, max_tokens, thinking=None, use_tools=True) -> str:
         if provider == "google_gemini":
             return self._call_google(model, messages, system_prompt, temperature, max_tokens)
         elif provider == "featherless":
@@ -76,12 +78,16 @@ class LLMRouter:
                 model, messages, system_prompt, temperature, max_tokens,
                 base_url="https://api.featherless.ai/v1",
                 api_key=os.environ["FEATHERLESS_API_KEY"],
+                thinking=thinking,
+                use_tools=use_tools,
             )
         elif provider == "aiml_api":
             return self._call_openai_compat(
                 model, messages, system_prompt, temperature, max_tokens,
                 base_url="https://api.aimlapi.com/v1",
                 api_key=os.environ["AIML_API_KEY"],
+                thinking=thinking,
+                use_tools=use_tools,
             )
         else:
             raise ValueError(f"Unknown provider: {provider}")
@@ -110,7 +116,7 @@ class LLMRouter:
         )
         return response.text
 
-    def _call_openai_compat(self, model, messages, system_prompt, temperature, max_tokens, base_url, api_key) -> str:
+    def _call_openai_compat(self, model, messages, system_prompt, temperature, max_tokens, base_url, api_key, thinking=None, use_tools=True) -> str:
         import json as _json
         import re
         from openai import OpenAI
@@ -136,9 +142,33 @@ class LLMRouter:
             },
         }
 
-        # enable_thinking only works on Qwen3/DeepSeek models, not Gemini
-        supports_thinking = not model.startswith("google/")
+        # thinking: explicit config override takes priority; otherwise auto-detect from model name
+        # (Qwen3/DeepSeek support it; google/* and meta-llama/* do not)
+        if thinking is None:
+            supports_thinking = not model.startswith("google/") and not model.startswith("meta-llama/")
+        else:
+            supports_thinking = thinking
         extra = {"enable_thinking": True} if supports_thinking else {}
+
+        # Fast path: no tools, single call (used for lightweight lookup agents)
+        if not use_tools:
+            try:
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=full_messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    **({"extra_body": extra} if extra else {}),
+                )
+            except Exception:
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=full_messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+            content = response.choices[0].message.content or ""
+            return re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
 
         for _ in range(4):
             try:
@@ -151,12 +181,23 @@ class LLMRouter:
                     **({"extra_body": extra} if extra else {}),
                 )
             except Exception:
-                response = client.chat.completions.create(
-                    model=model,
-                    messages=full_messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                )
+                try:
+                    # tools not supported by this model/backend — keep thinking, drop tools
+                    response = client.chat.completions.create(
+                        model=model,
+                        messages=full_messages,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        **({"extra_body": extra} if extra else {}),
+                    )
+                except Exception:
+                    # bare fallback — no tools, no thinking
+                    response = client.chat.completions.create(
+                        model=model,
+                        messages=full_messages,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                    )
 
             choice = response.choices[0]
             if choice.finish_reason == "tool_calls" and getattr(choice.message, "tool_calls", None):

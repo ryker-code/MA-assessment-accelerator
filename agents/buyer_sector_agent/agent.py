@@ -35,6 +35,9 @@ def _format_markdown(data: SectorAssessment, buyer_company: str) -> str:
     for flag in data.risk_flags:
         lines.append(f"- {flag}")
     lines += [f"\n### Narrative Summary", data.narrative_summary]
+    lines.append(f"\n### Data Sources")
+    for src in data.data_sources:
+        lines.append(f"- {src}")
     return "\n".join(lines)
 
 

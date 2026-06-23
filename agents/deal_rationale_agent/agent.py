@@ -66,6 +66,10 @@ def _format_markdown(data: DealRationale) -> str:
     lines += [f"\n### Recommended Next Steps"]
     for step in data.recommended_next_steps:
         lines.append(f"- {step}")
+    if data.data_sources:
+        lines.append(f"\n### Data Sources")
+        for src in data.data_sources:
+            lines.append(f"- {src}")
     return "\n".join(lines)
 
 
@@ -105,6 +109,7 @@ async def run_deal_rationale(assessment_id: str, target_company: str, buyer_comp
         except Exception:
             pass
 
+    sources = list({r["url"] for r in research_data if r.get("url")})
     valuation_context = "\n\n".join([
         f"Source: {r.get('url', 'unknown')}\n{r.get('content', '')}"
         for r in research_data[:8]
@@ -206,6 +211,8 @@ async def run_deal_rationale(assessment_id: str, target_company: str, buyer_comp
             if isinstance(v, dict) and v.get("category") in VALID_CATS
         ]
         structured = DealRationale.model_validate(parsed)
+        if not structured.data_sources:
+            structured.data_sources = sources[:10]
     except Exception as _parse_err:
         import traceback as _tb
         import logging as _log

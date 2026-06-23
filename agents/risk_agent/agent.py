@@ -52,6 +52,10 @@ def _format_markdown(data: RiskAssessment) -> str:
         f"\n### Cross-Workstream Insights",
         *[f"- {insight}" for insight in data.cross_workstream_insights],
     ]
+    if data.data_sources:
+        lines.append(f"\n### Data Sources")
+        for src in data.data_sources:
+            lines.append(f"- {src}")
     return "\n".join(lines)
 
 
@@ -98,7 +102,7 @@ async def run_risk_assessment(assessment_id: str, target_company: str, buyer_com
         '  "status": "COMPLETE",\n'
         '  "confidence_score": 0.85,\n'
         '  "human_review_required": false,\n'
-        '  "data_sources": [],\n'
+        '  "data_sources": ["list any regulatory, financial, or news URLs referenced in this risk analysis"],\n'
         '  "overall_risk_rating": "AMBER",\n'
         '  "risks": [\n'
         '    {\n'

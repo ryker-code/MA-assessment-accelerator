@@ -1718,7 +1718,7 @@ function renderDeal(content, title, confidence, icon) {
   const score = scoreM ? scoreM[1] : null;
   const confStr = confidence ? `Confidence: ${confidence}` : '';
 
-  let rationaleSec = null, vcaSec = null, compTxSec = null, valSec = null, condSec = null, nextSec = null;
+  let rationaleSec = null, vcaSec = null, compTxSec = null, valSec = null, condSec = null, nextSec = null, sources = [];
   for (const sec of sections) {
     const h = sec.heading.toLowerCase();
     if (h.includes('deal rationale') || h.includes('decision rationale') || h.includes('top 5')) rationaleSec = sec;
@@ -1727,6 +1727,7 @@ function renderDeal(content, title, confidence, icon) {
     else if (h.includes('valuation')) valSec = sec;
     else if (h.includes('condition') || h.includes('reversal')) condSec = sec;
     else if (h.includes('next step')) nextSec = sec;
+    else if (h.includes('data sources')) sources = parseListItems(sec.content);
   }
 
   let html = `<div>
@@ -1852,6 +1853,7 @@ function renderDeal(content, title, confidence, icon) {
     </div>`;
   }
 
+  if (sources.length) html += renderDataSources(sources);
   html += '</div>';
   return html;
 }

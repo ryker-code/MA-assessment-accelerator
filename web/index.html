@@ -1888,16 +1888,19 @@ function extractValuationNum(content, type) {
 
 // ── Data Sources ───────────────────────────────────────────────────────────
 function renderDataSources(sources) {
-  const clean = sources
+  const items = sources
     .map(s => s.replace(/^[-*]\s*/,'').trim())
-    .filter(s => s.startsWith('http') &&
-      !s.includes('vertexaisearch') &&
-      !s.includes('googleapis.com') &&
-      !s.match(/google\.com\/search/));
-  if (!clean.length) return '';
-  const parts = clean.map((url, i) => {
-    const link = `<a class="source-link" href="${escAttr(url)}" target="_blank" rel="noopener">${escHtml(url)}</a>`;
-    return i === 0 ? link : `<span class="source-sep">|</span>${link}`;
+    .filter(s => s.length > 0 && !s.match(/google\.com\/search\?/));
+  if (!items.length) return '';
+  const parts = items.map((s, i) => {
+    let item;
+    if (s.startsWith('http')) {
+      const label = s.length > 60 ? s.replace(/^https?:\/\/(www\.)?/, '').slice(0, 55) + '…' : s;
+      item = `<a class="source-link" href="${escAttr(s)}" target="_blank" rel="noopener">${escHtml(label)}</a>`;
+    } else {
+      item = `<span class="source-link" style="color:var(--text);cursor:default">${escHtml(s)}</span>`;
+    }
+    return i === 0 ? item : `<span class="source-sep">|</span>${item}`;
   }).join('');
   return `<div class="card card-sm" style="margin-bottom:16px">
     <div class="card-title"><span class="card-title-dot"></span>Data Sources</div>

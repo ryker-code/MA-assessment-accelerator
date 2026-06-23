@@ -1,6 +1,6 @@
 # Band
 band-sdk>=0.1.0
-thenvoi-rest
+thenvoi-client-rest>=0.0.7
 
 # LLM Providers
 openai>=1.30.0

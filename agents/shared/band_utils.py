@@ -38,14 +38,20 @@ def _load_configs() -> dict:
     global _configs
     if _configs:
         return _configs
-    # Look for agent_config.yaml in the project root (two levels up from this file)
+    # Look for agent_config.yaml — check Render secret file path first, then project root
     here = Path(__file__).resolve().parent
-    for candidate in [here.parent.parent / "agent_config.yaml", Path("agent_config.yaml")]:
+    for candidate in [
+        Path("/etc/secrets/agent_config.yaml"),          # Render secret file mount
+        here.parent.parent / "agent_config.yaml",        # project root (Codespaces / local)
+        Path("agent_config.yaml"),                       # cwd fallback
+    ]:
         if candidate.exists():
             import yaml
             with open(candidate) as f:
                 _configs = yaml.safe_load(f) or {}
+            logger.info("Loaded agent_config from %s", candidate)
             return _configs
+    logger.warning("agent_config.yaml not found in any expected location — Band posting disabled")
     return {}
 
 
